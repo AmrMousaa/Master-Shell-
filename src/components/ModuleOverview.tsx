@@ -1,5 +1,6 @@
 import type { Pulse_modules } from '../generated/models/Pulse_modulesModel';
 import type { ModuleWithApps } from '../hooks/useNavigationData';
+import { HeroClock } from './Clock';
 import { Icon } from './Icon';
 import { IconChevronRight, IconGrid, IconHub, IconInbox } from './icons';
 
@@ -8,7 +9,7 @@ interface ModuleOverviewProps {
   onSelectModule: (moduleId: string) => void;
 }
 
-const DEFAULT_ACCENT = '#2563eb';
+const DEFAULT_ACCENT = '#b8862f';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -34,24 +35,31 @@ export function ModuleOverview({ modulesById, onSelectModule }: ModuleOverviewPr
   return (
     <div className="module-overview">
       <div className="overview-hero">
+        <div className="overview-hero-texture" aria-hidden="true" />
         <div className="overview-hero-glow" aria-hidden="true" />
-        <div className="overview-hero-icon" aria-hidden="true">
-          <IconHub width={26} height={26} />
+        <div className="overview-hero-main">
+          <div className="overview-hero-icon" aria-hidden="true">
+            <IconHub width={26} height={26} />
+          </div>
+          <h1 className="overview-hero-title">{getGreeting()}</h1>
+          <p className="overview-hero-subtitle">Everything your team needs, in one place.</p>
+          <div className="overview-hero-stats">
+            <span className="overview-hero-stat">
+              <IconGrid width={14} height={14} />
+              {entries.length} {entries.length === 1 ? 'module' : 'modules'}
+            </span>
+            <span className="overview-hero-stat-divider" />
+            <span className="overview-hero-stat">
+              {totalApps} {totalApps === 1 ? 'app' : 'apps'} available
+            </span>
+          </div>
         </div>
-        <h1 className="overview-hero-title">{getGreeting()}</h1>
-        <p className="overview-hero-subtitle">Everything your team needs, in one place.</p>
-        <div className="overview-hero-stats">
-          <span className="overview-hero-stat">
-            <IconGrid width={14} height={14} />
-            {entries.length} {entries.length === 1 ? 'module' : 'modules'}
-          </span>
-          <span className="overview-hero-stat-divider" />
-          <span className="overview-hero-stat">
-            {totalApps} {totalApps === 1 ? 'app' : 'apps'} available
-          </span>
-        </div>
+        <HeroClock />
       </div>
-      <h2 className="section-title section-title-plain">Modules</h2>
+      <h2 className="section-title section-title-plain">
+        <IconGrid width={16} height={16} />
+        Modules
+      </h2>
       <div className="module-grid">
         {entries.map(({ module, apps }) => (
           <ModuleTile key={module.pulse_moduleid} module={module} appCount={apps.length} onSelect={onSelectModule} />
@@ -79,19 +87,20 @@ function ModuleTile({
       onClick={() => onSelect(module.pulse_moduleid)}
     >
       <div className="module-tile-glow" aria-hidden="true" />
-      <div className="module-tile-icon">
-        <Icon src={module.pulse_iconurl} alt={module.pulse_name ?? 'Module'} size={40} />
-      </div>
       <div className="module-tile-name-row">
-        <div className="module-tile-name">{module.pulse_name}</div>
+        <div className="module-tile-icon">
+          <Icon src={module.pulse_iconurl} alt={module.pulse_name ?? 'Module'} size={22} />
+        </div>
         <span className="module-tile-chevron-ring">
           <IconChevronRight className="module-tile-chevron" width={15} height={15} aria-hidden="true" />
         </span>
       </div>
+      <div className="module-tile-name">{module.pulse_name}</div>
       {module.pulse_description && <p className="module-tile-description">{module.pulse_description}</p>}
-      <div className="module-tile-count">
+      <span className="module-tile-count">
+        <IconGrid width={11} height={11} />
         {appCount} {appCount === 1 ? 'app' : 'apps'}
-      </div>
+      </span>
     </button>
   );
 }

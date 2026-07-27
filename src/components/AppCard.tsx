@@ -1,5 +1,6 @@
 import type { Pulse_apps } from '../generated/models/Pulse_appsModel';
 import { Pulse_appspulse_apptype } from '../generated/models/Pulse_appsModel';
+import { withHiddenNavbar } from '../utils/url';
 import { Icon } from './Icon';
 import { IconArrowUpRight, IconGlobe, IconMonitor, IconSmartphone } from './icons';
 
@@ -7,7 +8,11 @@ interface AppCardProps {
   app: Pulse_apps;
   accent?: string;
   moduleName?: string;
-  onLaunch: (app: Pulse_apps) => void;
+}
+
+function launchApp(app: Pulse_apps) {
+  if (!app.pulse_appurl) return;
+  window.location.href = withHiddenNavbar(app.pulse_appurl);
 }
 
 const TYPE_ICON: Record<string, typeof IconGlobe> = {
@@ -16,7 +21,7 @@ const TYPE_ICON: Record<string, typeof IconGlobe> = {
   Desktop: IconMonitor,
 };
 
-export function AppCard({ app, accent, moduleName, onLaunch }: AppCardProps) {
+export function AppCard({ app, accent, moduleName }: AppCardProps) {
   const typeLabel = app.pulse_apptype ? Pulse_appspulse_apptype[app.pulse_apptype] : undefined;
   const TypeIcon = typeLabel ? TYPE_ICON[typeLabel] : undefined;
 
@@ -25,7 +30,7 @@ export function AppCard({ app, accent, moduleName, onLaunch }: AppCardProps) {
       type="button"
       className="app-card"
       style={accent ? ({ '--module-accent': accent } as React.CSSProperties) : undefined}
-      onClick={() => onLaunch(app)}
+      onClick={() => launchApp(app)}
       disabled={!app.pulse_appurl}
     >
       <div className="app-card-header">

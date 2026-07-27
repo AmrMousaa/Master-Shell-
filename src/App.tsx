@@ -3,13 +3,10 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ModuleOverview } from './components/ModuleOverview';
 import { AppGrid } from './components/AppGrid';
-import { AppViewer } from './components/AppViewer';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { useNavigationData } from './hooks/useNavigationData';
 import type { View } from './types/view';
-import type { Pulse_apps } from './generated/models/Pulse_appsModel';
-import { Pulse_appspulse_opentype } from './generated/models/Pulse_appsModel';
 import './App.css';
 
 const COMPANY_NAME = 'Andalusia Pulse';
@@ -19,7 +16,6 @@ function App() {
   const [view, setView] = useState<View>({ kind: 'overview' });
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
-  const [activeApp, setActiveApp] = useState<Pulse_apps | null>(null);
 
   const moduleNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -49,21 +45,13 @@ function App() {
     setView({ kind: 'overview' });
     setSearchQuery('');
     setMobileNavOpen(false);
-    setActiveApp(null);
   }
 
   function selectModule(moduleId: string) {
     setView({ kind: 'module', moduleId });
     setSearchQuery('');
     setMobileNavOpen(false);
-    setActiveApp(null);
   }
-
-  const activeAppAccent = activeApp
-    ? modulesById.get(activeApp._pulse_module_value ?? '')?.module.pulse_colorcode
-    : undefined;
-  const activeAppVariant =
-    activeApp?.pulse_opentype && Pulse_appspulse_opentype[activeApp.pulse_opentype] === 'Popup' ? 'modal' : 'panel';
 
   let content: React.ReactNode;
   if (status === 'loading') {
@@ -78,7 +66,6 @@ function App() {
         emptyMessage="No apps match your search."
         showModuleName
         moduleNameById={moduleNameById}
-        onLaunch={setActiveApp}
       />
     );
   } else if (view.kind === 'module' && selectedModuleEntry) {
@@ -89,7 +76,6 @@ function App() {
         accent={selectedModuleEntry.module.pulse_colorcode}
         apps={selectedModuleEntry.apps}
         emptyMessage="This module doesn't have any active apps yet."
-        onLaunch={setActiveApp}
       />
     );
   } else {
@@ -116,15 +102,6 @@ function App() {
           />
         </div>
         <main className="main-content">{content}</main>
-        {activeApp && (
-          <AppViewer
-            key={activeApp.pulse_appid}
-            app={activeApp}
-            variant={activeAppVariant}
-            accent={activeAppAccent}
-            onClose={() => setActiveApp(null)}
-          />
-        )}
       </div>
     </div>
   );

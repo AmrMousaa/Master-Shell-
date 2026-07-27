@@ -1,4 +1,5 @@
-import { IconGrid, IconHub, IconMenu, IconSearch } from './icons';
+import { CompactClock } from './Clock';
+import { IconGrid, IconLayers, IconMenu, IconSearch, IconUser } from './icons';
 
 interface HeaderProps {
   companyName: string;
@@ -9,6 +10,9 @@ interface HeaderProps {
 }
 
 export function Header({ companyName, searchQuery, onSearchChange, onGoHome, onToggleMobileNav }: HeaderProps) {
+  const words = companyName.trim().split(/\s+/);
+  const lastWord = words.pop();
+
   return (
     <header className="app-header">
       <button type="button" className="mobile-nav-toggle" onClick={onToggleMobileNav} aria-label="Toggle module navigation">
@@ -16,9 +20,12 @@ export function Header({ companyName, searchQuery, onSearchChange, onGoHome, onT
       </button>
       <button type="button" className="brand" onClick={onGoHome}>
         <span className="brand-mark" aria-hidden="true">
-          <IconHub width={19} height={19} />
+          <IconLayers width={17} height={17} />
         </span>
-        <span className="brand-name">{companyName}</span>
+        <span className="brand-name">
+          {words.length > 0 ? `${words.join(' ')} ` : ''}
+          <span className="brand-name-accent">{lastWord}</span>
+        </span>
       </button>
       <span className="header-divider" aria-hidden="true" />
       <div className="header-search">
@@ -32,10 +39,14 @@ export function Header({ companyName, searchQuery, onSearchChange, onGoHome, onT
           aria-label="Search apps"
         />
       </div>
+      <CompactClock />
       <button type="button" className="home-link" onClick={onGoHome}>
         <IconGrid width={15} height={15} />
         Module overview
       </button>
+      <span className="header-avatar" aria-hidden="true">
+        <IconUser width={16} height={16} />
+      </span>
     </header>
   );
 }

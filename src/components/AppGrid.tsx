@@ -10,10 +10,9 @@ interface AppGridProps {
   emptyMessage: string;
   showModuleName?: boolean;
   moduleNameById?: Map<string, string>;
-  onLaunch: (app: Pulse_apps) => void;
 }
 
-export function AppGrid({ title, description, accent, apps, emptyMessage, showModuleName, moduleNameById, onLaunch }: AppGridProps) {
+export function AppGrid({ title, description, accent, apps, emptyMessage, showModuleName, moduleNameById }: AppGridProps) {
   return (
     <div className="app-grid-section">
       <div className="section-header" style={accent ? ({ '--module-accent': accent } as React.CSSProperties) : undefined}>
@@ -33,7 +32,6 @@ export function AppGrid({ title, description, accent, apps, emptyMessage, showMo
               app={app}
               accent={accent}
               moduleName={showModuleName ? moduleNameById?.get(app._pulse_module_value ?? '') : undefined}
-              onLaunch={onLaunch}
             />
           ))}
         </div>
