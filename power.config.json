@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "appId": "dafd6182-37bc-4c71-ae37-021ec815a79b",
+  "appDisplayName": "Andalusia Pulse",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "ce6c79ed-8940-e233-9680-22f2006a255d",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "modules": {
+          "entitySetName": "pulse_modules",
+          "logicalName": "pulse_module",
+          "isHidden": false
+        },
+        "apps": {
+          "entitySetName": "pulse_apps",
+          "logicalName": "pulse_app",
+          "isHidden": false
+        },
+        "securityroles": {
+          "entitySetName": "roles",
+          "logicalName": "role",
+          "isHidden": false
+        },
+        "apppermissions": {
+          "entitySetName": "pulse_apppermissions",
+          "logicalName": "pulse_apppermission",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}
