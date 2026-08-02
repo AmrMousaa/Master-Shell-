@@ -33,6 +33,11 @@
           "entitySetName": "pulse_apppermissions",
           "logicalName": "pulse_apppermission",
           "isHidden": false
+        },
+        "users": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser",
+          "isHidden": false
         }
       },
       "environmentVariableName": ""

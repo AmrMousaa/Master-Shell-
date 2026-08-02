@@ -5,7 +5,17 @@
       "Bash(npx tsc *)",
       "Bash(npx vite *)",
       "Bash(npx eslint *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -sI \"https://cdn.corenexis.com/f/wjBKZMAvMZc.png\" --max-time 15)",
+      "Bash(curl -s -o /tmp/test_icon.png -w \"HTTP:%{http_code} TYPE:%{content_type} SIZE:%{size_download}\\\\n\" \"https://cdn.corenexis.com/f/wjBKZMAvMZc.png\" --max-time 15)",
+      "Read(//tmp/**)",
+      "WebFetch(domain:cdn.corenexis.com)",
+      "Bash(xargs grep -l \"CurrentUser\\\\|whoAmI\\\\|getUser\")",
+      "Bash(where pac *)",
+      "Bash(pac --version)",
+      "Bash(xargs grep -l \"expand\")",
+      "Bash(xargs grep -l \"retrieveMultipleRecordsAsync\")",
+      "Bash(xargs grep -l \"IOperationOptions\")"
     ]
   }
 }

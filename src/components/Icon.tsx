@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IconAppWindow } from './icons';
 
 interface IconProps {
@@ -7,16 +8,16 @@ interface IconProps {
 }
 
 export function Icon({ src, alt, size = 28 }: IconProps) {
-  if (src) {
+  const [hasError, setHasError] = useState(false);
+
+  if (src && !hasError) {
     return (
       <img
         src={src}
         alt={alt}
         className="icon-img"
         style={{ width: size, height: size }}
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-        }}
+        onError={() => setHasError(true)}
       />
     );
   }

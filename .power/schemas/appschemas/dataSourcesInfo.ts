@@ -32,5 +32,12 @@ export const dataSourcesInfo = {
     "primaryKey": "roleid",
     "dataSourceType": "Dataverse",
     "apis": {}
+  },
+  "systemusers": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "systemuserid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
   }
 };
