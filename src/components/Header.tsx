@@ -1,23 +1,19 @@
 import { CompactClock } from './Clock';
-import { IconGrid, IconLayers, IconMenu, IconSearch, IconUser } from './icons';
+import { IconGrid, IconLayers, IconSearch, IconUser } from './icons';
 
 interface HeaderProps {
   companyName: string;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onGoHome: () => void;
-  onToggleMobileNav: () => void;
 }
 
-export function Header({ companyName, searchQuery, onSearchChange, onGoHome, onToggleMobileNav }: HeaderProps) {
+export function Header({ companyName, searchQuery, onSearchChange, onGoHome }: HeaderProps) {
   const words = companyName.trim().split(/\s+/);
   const lastWord = words.pop();
 
   return (
     <header className="app-header">
-      <button type="button" className="mobile-nav-toggle" onClick={onToggleMobileNav} aria-label="Toggle module navigation">
-        <IconMenu width={20} height={20} />
-      </button>
       <button type="button" className="brand" onClick={onGoHome}>
         <span className="brand-mark" aria-hidden="true">
           <IconLayers width={17} height={17} />

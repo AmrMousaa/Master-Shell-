@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
+import { Navigation } from './components/Navigation';
 import { ModuleOverview } from './components/ModuleOverview';
 import { AppGrid } from './components/AppGrid';
 import { LoadingState } from './components/LoadingState';
@@ -15,7 +15,6 @@ function App() {
   const { status, error, modules, modulesById, retry } = useNavigationData();
   const [view, setView] = useState<View>({ kind: 'overview' });
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   const moduleNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -44,13 +43,11 @@ function App() {
   function goHome() {
     setView({ kind: 'overview' });
     setSearchQuery('');
-    setMobileNavOpen(false);
   }
 
   function selectModule(moduleId: string) {
     setView({ kind: 'module', moduleId });
     setSearchQuery('');
-    setMobileNavOpen(false);
   }
 
   let content: React.ReactNode;
@@ -89,20 +86,15 @@ function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onGoHome={goHome}
-        onToggleMobileNav={() => setMobileNavOpen((open) => !open)}
       />
-      <div className="app-body">
-        {isMobileNavOpen && <div className="mobile-nav-scrim" onClick={() => setMobileNavOpen(false)} />}
-        <div className={`sidebar-wrapper${isMobileNavOpen ? ' open' : ''}`}>
-          <Sidebar
-            modules={modules}
-            selectedModuleId={view.kind === 'module' ? view.moduleId : null}
-            onSelectModule={selectModule}
-            onSelectOverview={goHome}
-          />
-        </div>
-        <main className="main-content">{content}</main>
-      </div>
+      <Navigation
+        modules={modules}
+        modulesById={modulesById}
+        selectedModuleId={view.kind === 'module' ? view.moduleId : null}
+        onSelectModule={selectModule}
+        onSelectOverview={goHome}
+      />
+      <main className="main-content">{content}</main>
     </div>
   );
 }
