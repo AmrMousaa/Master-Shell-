@@ -15,7 +15,8 @@
       "Bash(pac --version)",
       "Bash(xargs grep -l \"expand\")",
       "Bash(xargs grep -l \"retrieveMultipleRecordsAsync\")",
-      "Bash(xargs grep -l \"IOperationOptions\")"
+      "Bash(xargs grep -l \"IOperationOptions\")",
+      "Bash(nohup npm run dev -- --port 3000)"
     ]
   }
 }
