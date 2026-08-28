@@ -19,6 +19,27 @@ export const dataSourcesInfo = {
     "dataSourceType": "Dataverse",
     "apis": {}
   },
+  "pulse_appusagestatses": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "pulse_appusagestatsid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "pulse_appuserlastuseds": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "pulse_appuserlastusedid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "pulse_favorites": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "pulse_favoriteid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
   "pulse_modules": {
     "tableId": "",
     "version": "",

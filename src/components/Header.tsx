@@ -1,14 +1,23 @@
 import { CompactClock } from './Clock';
-import { IconGrid, IconLayers, IconSearch, IconUser } from './icons';
+import { IconBarChart, IconGrid, IconLayers, IconSearch, IconUser } from './icons';
 
 interface HeaderProps {
   companyName: string;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onGoHome: () => void;
+  showAnalyticsLink?: boolean;
+  onSelectAnalytics?: () => void;
 }
 
-export function Header({ companyName, searchQuery, onSearchChange, onGoHome }: HeaderProps) {
+export function Header({
+  companyName,
+  searchQuery,
+  onSearchChange,
+  onGoHome,
+  showAnalyticsLink,
+  onSelectAnalytics,
+}: HeaderProps) {
   const words = companyName.trim().split(/\s+/);
   const lastWord = words.pop();
 
@@ -36,6 +45,12 @@ export function Header({ companyName, searchQuery, onSearchChange, onGoHome }: H
         />
       </div>
       <CompactClock />
+      {showAnalyticsLink && (
+        <button type="button" className="home-link" onClick={onSelectAnalytics}>
+          <IconBarChart width={15} height={15} />
+          Analytics
+        </button>
+      )}
       <button type="button" className="home-link" onClick={onGoHome}>
         <IconGrid width={15} height={15} />
         Module overview

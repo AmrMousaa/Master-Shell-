@@ -180,3 +180,22 @@ export function IconLoader(props: IconProps) {
     </svg>
   );
 }
+
+export function IconBarChart(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 20V10" />
+      <path d="M12 20V4" />
+      <path d="M20 20v-7" />
+      <path d="M4 20h16" />
+    </svg>
+  );
+}
+
+export function IconStar({ filled, ...props }: IconProps & { filled?: boolean }) {
+  return (
+    <svg {...base} fill={filled ? 'currentColor' : 'none'} {...props}>
+      <path d="M12 3.5l2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.6-4.1 6.1-.6z" />
+    </svg>
+  );
+}

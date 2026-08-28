@@ -38,6 +38,21 @@
           "entitySetName": "systemusers",
           "logicalName": "systemuser",
           "isHidden": false
+        },
+        "favorites": {
+          "entitySetName": "pulse_favorites",
+          "logicalName": "pulse_favorite",
+          "isHidden": false
+        },
+        "appuserlastused": {
+          "entitySetName": "pulse_appuserlastuseds",
+          "logicalName": "pulse_appuserlastused",
+          "isHidden": false
+        },
+        "appusagestats": {
+          "entitySetName": "pulse_appusagestatses",
+          "logicalName": "pulse_appusagestats",
+          "isHidden": false
         }
       },
       "environmentVariableName": ""

@@ -10,9 +10,23 @@ interface AppGridProps {
   emptyMessage: string;
   showModuleName?: boolean;
   moduleNameById?: Map<string, string>;
+  favoritedAppIds?: Set<string>;
+  pendingAppIds?: Set<string>;
+  onToggleFavorite?: (appId: string) => void;
 }
 
-export function AppGrid({ title, description, accent, apps, emptyMessage, showModuleName, moduleNameById }: AppGridProps) {
+export function AppGrid({
+  title,
+  description,
+  accent,
+  apps,
+  emptyMessage,
+  showModuleName,
+  moduleNameById,
+  favoritedAppIds,
+  pendingAppIds,
+  onToggleFavorite,
+}: AppGridProps) {
   return (
     <div className="app-grid-section">
       <div className="section-header" style={accent ? ({ '--module-accent': accent } as React.CSSProperties) : undefined}>
@@ -32,6 +46,9 @@ export function AppGrid({ title, description, accent, apps, emptyMessage, showMo
               app={app}
               accent={accent}
               moduleName={showModuleName ? moduleNameById?.get(app._pulse_module_value ?? '') : undefined}
+              isFavorite={favoritedAppIds?.has(app.pulse_appid)}
+              isFavoritePending={pendingAppIds?.has(app.pulse_appid)}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </div>

@@ -1,12 +1,18 @@
+import type { Pulse_apps } from '../generated/models/Pulse_appsModel';
 import type { Pulse_modules } from '../generated/models/Pulse_modulesModel';
 import type { ModuleWithApps } from '../hooks/useNavigationData';
+import { AppCard } from './AppCard';
 import { HeroClock } from './Clock';
 import { Icon } from './Icon';
-import { IconChevronRight, IconGrid, IconHub, IconInbox } from './icons';
+import { IconChevronRight, IconGrid, IconHub, IconInbox, IconStar } from './icons';
 
 interface ModuleOverviewProps {
   modulesById: Map<string, ModuleWithApps>;
   onSelectModule: (moduleId: string) => void;
+  favoriteApps: Pulse_apps[];
+  favoritedAppIds: Set<string>;
+  pendingAppIds: Set<string>;
+  onToggleFavorite: (appId: string) => void;
 }
 
 const DEFAULT_ACCENT = '#b8862f';
@@ -18,7 +24,14 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-export function ModuleOverview({ modulesById, onSelectModule }: ModuleOverviewProps) {
+export function ModuleOverview({
+  modulesById,
+  onSelectModule,
+  favoriteApps,
+  favoritedAppIds,
+  pendingAppIds,
+  onToggleFavorite,
+}: ModuleOverviewProps) {
   const entries = Array.from(modulesById.values());
 
   if (entries.length === 0) {
@@ -56,6 +69,25 @@ export function ModuleOverview({ modulesById, onSelectModule }: ModuleOverviewPr
         </div>
         <HeroClock />
       </div>
+      {favoriteApps.length > 0 && (
+        <>
+          <h2 className="section-title section-title-plain">
+            <IconStar width={16} height={16} />
+            My Favorites
+          </h2>
+          <div className="app-grid">
+            {favoriteApps.map((app) => (
+              <AppCard
+                key={app.pulse_appid}
+                app={app}
+                isFavorite={favoritedAppIds.has(app.pulse_appid)}
+                isFavoritePending={pendingAppIds.has(app.pulse_appid)}
+                onToggleFavorite={onToggleFavorite}
+              />
+            ))}
+          </div>
+        </>
+      )}
       <h2 className="section-title section-title-plain">
         <IconGrid width={16} height={16} />
         Modules

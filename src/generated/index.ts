@@ -7,6 +7,9 @@
 export * as CommonModels from './models/CommonModels';
 export * as Pulse_apppermissionsModel from './models/Pulse_apppermissionsModel';
 export * as Pulse_appsModel from './models/Pulse_appsModel';
+export * as Pulse_appusagestatsesModel from './models/Pulse_appusagestatsesModel';
+export * as Pulse_appuserlastusedsModel from './models/Pulse_appuserlastusedsModel';
+export * as Pulse_favoritesModel from './models/Pulse_favoritesModel';
 export * as Pulse_modulesModel from './models/Pulse_modulesModel';
 export * as RolesModel from './models/RolesModel';
 export * as SystemusersModel from './models/SystemusersModel';
@@ -14,6 +17,9 @@ export * as SystemusersModel from './models/SystemusersModel';
 // Services
 export * from './services/Pulse_apppermissionsService';
 export * from './services/Pulse_appsService';
+export * from './services/Pulse_appusagestatsesService';
+export * from './services/Pulse_appuserlastusedsService';
+export * from './services/Pulse_favoritesService';
 export * from './services/Pulse_modulesService';
 export * from './services/RolesService';
 export * from './services/SystemusersService';
