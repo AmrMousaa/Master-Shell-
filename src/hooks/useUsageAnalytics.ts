@@ -26,6 +26,11 @@ export interface AppUniqueUsers {
   uniqueUserCount: number;
 }
 
+export interface ModuleClicks {
+  moduleId: string;
+  totalClicks: number;
+}
+
 interface UsageAnalyticsState {
   status: 'loading' | 'error' | 'ready';
   error?: string;
@@ -33,7 +38,9 @@ interface UsageAnalyticsState {
   dailyTrend: DailyTrendPoint[];
   totalLaunches: number;
   activeAppsCount: number;
+  totalAppsCount: number;
   uniqueUsersByApp: AppUniqueUsers[];
+  clicksByModule: ModuleClicks[];
 }
 
 const ACTIVE_APPS_FILTER = 'pulse_isactive eq true';
@@ -62,7 +69,9 @@ const INITIAL_STATE: UsageAnalyticsState = {
   dailyTrend: [],
   totalLaunches: 0,
   activeAppsCount: 0,
+  totalAppsCount: 0,
   uniqueUsersByApp: [],
+  clicksByModule: [],
 };
 
 export function useUsageAnalytics(filters: UsageFilters) {
@@ -97,9 +106,13 @@ export function useUsageAnalytics(filters: UsageFilters) {
       }
 
       const appNameById = new Map<string, string>();
+      const moduleIdByApp = new Map<string, string>();
       const scopedAppIds = new Set<string>();
       for (const app of appsResult.data) {
         appNameById.set(app.pulse_appid, app.pulse_name ?? '');
+        if (app._pulse_module_value) {
+          moduleIdByApp.set(app.pulse_appid, app._pulse_module_value);
+        }
         if (!moduleId || app._pulse_module_value === moduleId) {
           scopedAppIds.add(app.pulse_appid);
         }
@@ -121,7 +134,8 @@ export function useUsageAnalytics(filters: UsageFilters) {
           clicksByApp.set(appId, (clicksByApp.get(appId) ?? 0) + clicks);
         }
         if (row.pulse_date) {
-          clicksByDate.set(row.pulse_date, (clicksByDate.get(row.pulse_date) ?? 0) + clicks);
+          const dateOnly = row.pulse_date.slice(0, 10);
+          clicksByDate.set(dateOnly, (clicksByDate.get(dateOnly) ?? 0) + clicks);
         }
       }
 
@@ -137,6 +151,17 @@ export function useUsageAnalytics(filters: UsageFilters) {
 
       const totalLaunches = Array.from(clicksByApp.values()).reduce((sum, count) => sum + count, 0);
       const activeAppsCount = Array.from(clicksByApp.values()).filter((count) => count > 0).length;
+      const totalAppsCount = scopedAppIds.size;
+
+      const clicksByModuleId = new Map<string, number>();
+      for (const [appId, clicks] of clicksByApp.entries()) {
+        const appModuleId = moduleIdByApp.get(appId);
+        if (!appModuleId) continue;
+        clicksByModuleId.set(appModuleId, (clicksByModuleId.get(appModuleId) ?? 0) + clicks);
+      }
+      const clicksByModule: ModuleClicks[] = Array.from(clicksByModuleId.entries())
+        .map(([moduleIdKey, totalClicks]) => ({ moduleId: moduleIdKey, totalClicks }))
+        .sort((a, b) => b.totalClicks - a.totalClicks);
 
       const usersByApp = new Map<string, Set<string>>();
       for (const row of lastUsedRows) {
@@ -158,7 +183,9 @@ export function useUsageAnalytics(filters: UsageFilters) {
         dailyTrend,
         totalLaunches,
         activeAppsCount,
+        totalAppsCount,
         uniqueUsersByApp,
+        clicksByModule,
       });
     } catch (err) {
       setState((prev) => ({
