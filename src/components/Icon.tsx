@@ -7,7 +7,7 @@ interface IconProps {
   size?: number;
 }
 
-export function Icon({ src, alt, size = 28 }: IconProps) {
+export function Icon({ src, alt, size = 20 }: IconProps) {
   const [hasError, setHasError] = useState(false);
 
   if (src && !hasError) {
@@ -21,9 +21,5 @@ export function Icon({ src, alt, size = 28 }: IconProps) {
       />
     );
   }
-  return (
-    <div className="icon-fallback" style={{ width: size, height: size }}>
-      <IconAppWindow width={size * 0.55} height={size * 0.55} strokeWidth={1.6} />
-    </div>
-  );
+  return <IconAppWindow width={size} height={size} strokeWidth={1.6} aria-label={alt} />;
 }

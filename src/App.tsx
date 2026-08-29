@@ -1,27 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Header } from './components/Header';
-import { Navigation } from './components/Navigation';
+import { Sidebar } from './components/Sidebar';
+import { Topbar } from './components/Topbar';
 import { ModuleOverview } from './components/ModuleOverview';
 import { AppGrid } from './components/AppGrid';
 import { UsageAnalyticsDashboard } from './components/UsageAnalyticsDashboard';
+import { Configurations } from './components/Configurations';
+import { Dock } from './components/Dock';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { Toast } from './components/Toast';
+import { IconSearch } from './components/icons';
 import { useNavigationData } from './hooks/useNavigationData';
 import { useFavorites } from './hooks/useFavorites';
+import { useCurrentUser } from './hooks/useCurrentUser';
 import { hasAnalyticsAccess } from './services/currentUserAccess';
 import type { View } from './types/view';
 import './App.css';
 
-const COMPANY_NAME = 'Andalusia Pulse';
-
 function App() {
   const { status, error, modules, apps, modulesById, retry } = useNavigationData();
   const { favorites, favoritedAppIds, pendingAppIds, toggleFavorite: toggleFavoriteRaw } = useFavorites();
+  const { fullName } = useCurrentUser();
   const [view, setView] = useState<View>({ kind: 'overview' });
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [canViewAnalytics, setCanViewAnalytics] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +82,7 @@ function App() {
   }, [searchQuery, modulesById]);
 
   const selectedModuleEntry = view.kind === 'module' ? modulesById.get(view.moduleId) : undefined;
+  const dockActive = view.kind === 'analytics' ? 'analytics' : view.kind === 'settings' ? 'settings' : 'home';
 
   function goHome() {
     setView({ kind: 'overview' });
@@ -94,8 +99,15 @@ function App() {
     setSearchQuery('');
   }
 
+  function selectSettings() {
+    setView({ kind: 'settings' });
+    setSearchQuery('');
+  }
+
   let content: React.ReactNode;
-  if (status === 'loading') {
+  if (view.kind === 'settings') {
+    content = <Configurations onBack={goHome} />;
+  } else if (status === 'loading') {
     content = <LoadingState />;
   } else if (status === 'error') {
     content = <ErrorState message={error} onRetry={retry} />;
@@ -105,6 +117,7 @@ function App() {
     content = (
       <AppGrid
         title={`Search results for "${searchQuery}"`}
+        icon={<IconSearch width={24} height={24} />}
         apps={searchResults}
         emptyMessage="No apps match your search."
         showModuleName
@@ -112,6 +125,7 @@ function App() {
         favoritedAppIds={favoritedAppIds}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        onBack={goHome}
       />
     );
   } else if (view.kind === 'module' && selectedModuleEntry) {
@@ -119,12 +133,13 @@ function App() {
       <AppGrid
         title={selectedModuleEntry.module.pulse_name ?? ''}
         description={selectedModuleEntry.module.pulse_description}
-        accent={selectedModuleEntry.module.pulse_colorcode}
+        iconUrl={selectedModuleEntry.module.pulse_iconurl}
         apps={selectedModuleEntry.apps}
         emptyMessage="This module doesn't have any active apps yet."
         favoritedAppIds={favoritedAppIds}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        onBack={goHome}
       />
     );
   } else {
@@ -133,32 +148,45 @@ function App() {
         modulesById={modulesById}
         onSelectModule={selectModule}
         favoriteApps={favoriteApps}
-        favoritedAppIds={favoritedAppIds}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        moduleNameById={moduleNameById}
+        userName={fullName}
       />
     );
   }
 
   return (
-    <div className="app-shell">
-      <Header
-        companyName={COMPANY_NAME}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onGoHome={goHome}
-        showAnalyticsLink={canViewAnalytics}
-        onSelectAnalytics={selectAnalytics}
-      />
-      <Navigation
+    <div className="shell">
+      <Sidebar
         modules={modules}
         modulesById={modulesById}
         selectedModuleId={view.kind === 'module' ? view.moduleId : null}
         onSelectModule={selectModule}
-        onSelectOverview={goHome}
+        onGoHome={goHome}
+        favoritedAppIds={favoritedAppIds}
+        onToggleFavorite={toggleFavorite}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        userName={fullName}
       />
-      <main className="main-content">{content}</main>
+      <div className="main">
+        <Topbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          userName={fullName}
+        />
+        <main className="content">{content}</main>
+      </div>
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
+      <Dock
+        active={dockActive}
+        onGoHome={goHome}
+        onSelectAnalytics={selectAnalytics}
+        onSelectSettings={selectSettings}
+        canViewAnalytics={canViewAnalytics}
+      />
     </div>
   );
 }
