@@ -4,6 +4,7 @@ import { RolesService } from '../generated/services/RolesService';
 
 const SYSTEM_ADMINISTRATOR_ROLE_NAME = 'System Administrator';
 const ANALYTICS_VIEWER_ROLE_NAME = 'Pulse Analytics Viewer';
+const PULSE_ADMIN_ROLE_NAME = 'Pulse Admin';
 
 export interface CurrentUserAccess {
   isSystemAdministrator: boolean;
@@ -62,6 +63,24 @@ export async function hasAnalyticsAccess(): Promise<boolean> {
     // Fail closed: if the role or the user's roles can't be resolved (e.g.
     // the role doesn't exist yet in this environment), the analytics entry
     // point simply stays hidden rather than risking a false positive.
+    return false;
+  }
+}
+
+export async function hasPulseAdminAccess(): Promise<boolean> {
+  try {
+    const access = await getCurrentUserAccess();
+    if (access.isSystemAdministrator) return true;
+
+    const rolesResult = await RolesService.getAll({
+      filter: `name eq '${PULSE_ADMIN_ROLE_NAME}'`,
+    });
+    if (!rolesResult.success || !rolesResult.data) return false;
+
+    return rolesResult.data.some((role) => access.roleIds.has(role.roleid));
+  } catch {
+    // Fail closed: the Pulse Configuration entry point stays hidden rather
+    // than risking exposure if the role can't be resolved.
     return false;
   }
 }

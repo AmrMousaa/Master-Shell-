@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { ModuleOverview } from './components/ModuleOverview';
 import { AppGrid } from './components/AppGrid';
 import { UsageAnalyticsDashboard } from './components/UsageAnalyticsDashboard';
-import { Configurations } from './components/Configurations';
+import { PulseConfigScreen } from './components/config/PulseConfigScreen';
 import { Dock } from './components/Dock';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
@@ -13,7 +13,7 @@ import { IconSearch } from './components/icons';
 import { useNavigationData } from './hooks/useNavigationData';
 import { useFavorites } from './hooks/useFavorites';
 import { useCurrentUser } from './hooks/useCurrentUser';
-import { hasAnalyticsAccess } from './services/currentUserAccess';
+import { hasAnalyticsAccess, hasPulseAdminAccess } from './services/currentUserAccess';
 import type { View } from './types/view';
 import './App.css';
 
@@ -25,6 +25,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [canViewAnalytics, setCanViewAnalytics] = useState(false);
+  const [canManagePulseConfig, setCanManagePulseConfig] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,27 @@ function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    hasPulseAdminAccess().then((allowed) => {
+      if (!cancelled) setCanManagePulseConfig(allowed);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Modules/apps edited in Pulse Configuration are fetched through a
+  // separate hook, so refresh the main navigation data once the admin
+  // leaves that screen to pick up any changes (icon, name, order, etc.).
+  const previousViewKindRef = useRef(view.kind);
+  useEffect(() => {
+    if (previousViewKindRef.current === 'pulseConfig' && view.kind !== 'pulseConfig') {
+      retry();
+    }
+    previousViewKindRef.current = view.kind;
+  }, [view.kind, retry]);
 
   const moduleNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -82,7 +104,12 @@ function App() {
   }, [searchQuery, modulesById]);
 
   const selectedModuleEntry = view.kind === 'module' ? modulesById.get(view.moduleId) : undefined;
-  const dockActive = view.kind === 'analytics' ? 'analytics' : view.kind === 'settings' ? 'settings' : 'home';
+  const dockActive =
+    view.kind === 'analytics'
+      ? 'analytics'
+      : view.kind === 'pulseConfig'
+        ? 'pulseConfig'
+        : 'home';
 
   function goHome() {
     setView({ kind: 'overview' });
@@ -99,14 +126,14 @@ function App() {
     setSearchQuery('');
   }
 
-  function selectSettings() {
-    setView({ kind: 'settings' });
+  function selectPulseConfig() {
+    setView({ kind: 'pulseConfig' });
     setSearchQuery('');
   }
 
   let content: React.ReactNode;
-  if (view.kind === 'settings') {
-    content = <Configurations onBack={goHome} />;
+  if (view.kind === 'pulseConfig' && canManagePulseConfig) {
+    content = <PulseConfigScreen onBack={goHome} onError={setToastMessage} />;
   } else if (status === 'loading') {
     content = <LoadingState />;
   } else if (status === 'error') {
@@ -184,8 +211,9 @@ function App() {
         active={dockActive}
         onGoHome={goHome}
         onSelectAnalytics={selectAnalytics}
-        onSelectSettings={selectSettings}
+        onSelectPulseConfig={selectPulseConfig}
         canViewAnalytics={canViewAnalytics}
+        canManagePulseConfig={canManagePulseConfig}
       />
     </div>
   );

@@ -1,14 +1,22 @@
 import { IconBarChart, IconHome, IconSettings } from './icons';
 
 interface DockProps {
-  active: 'home' | 'analytics' | 'settings';
+  active: 'home' | 'analytics' | 'pulseConfig';
   onGoHome: () => void;
   onSelectAnalytics: () => void;
-  onSelectSettings: () => void;
+  onSelectPulseConfig: () => void;
   canViewAnalytics?: boolean;
+  canManagePulseConfig?: boolean;
 }
 
-export function Dock({ active, onGoHome, onSelectAnalytics, onSelectSettings, canViewAnalytics }: DockProps) {
+export function Dock({
+  active,
+  onGoHome,
+  onSelectAnalytics,
+  onSelectPulseConfig,
+  canViewAnalytics,
+  canManagePulseConfig,
+}: DockProps) {
   return (
     <div className="dock-wrap">
       <div className="dock">
@@ -30,16 +38,18 @@ export function Dock({ active, onGoHome, onSelectAnalytics, onSelectSettings, ca
             <span className="dock-label">Analytical dashboard</span>
           </button>
         )}
-        <button
-          type="button"
-          className={`dock-item${active === 'settings' ? ' active' : ''}`}
-          onClick={onSelectSettings}
-        >
-          <span className="dock-icon">
-            <IconSettings width={19} height={19} aria-hidden="true" />
-          </span>
-          <span className="dock-label">Configurations</span>
-        </button>
+        {canManagePulseConfig && (
+          <button
+            type="button"
+            className={`dock-item${active === 'pulseConfig' ? ' active' : ''}`}
+            onClick={onSelectPulseConfig}
+          >
+            <span className="dock-icon">
+              <IconSettings width={19} height={19} aria-hidden="true" />
+            </span>
+            <span className="dock-label">Configuration</span>
+          </button>
+        )}
       </div>
     </div>
   );
