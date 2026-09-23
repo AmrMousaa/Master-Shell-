@@ -17,6 +17,10 @@ export function Dock({
   canViewAnalytics,
   canManagePulseConfig,
 }: DockProps) {
+  if (!canViewAnalytics && !canManagePulseConfig) {
+    return null;
+  }
+
   return (
     <div className="dock-wrap">
       <div className="dock">
@@ -29,7 +33,7 @@ export function Dock({
         {canViewAnalytics && (
           <button
             type="button"
-            className={`dock-item${active === 'analytics' ? ' active' : ''}`}
+            className={`dock-item dock-item-analytics${active === 'analytics' ? ' active' : ''}`}
             onClick={onSelectAnalytics}
           >
             <span className="dock-icon">

@@ -20,13 +20,20 @@ export function Icon({ src, alt, size = 20 }: IconProps) {
 
   if (src && !hasError) {
     return (
-      <img
-        src={src}
-        alt={alt}
-        className="icon-img"
-        style={{ width: size, height: size }}
-        onError={() => setHasError(true)}
-      />
+      <span
+        role="img"
+        aria-label={alt}
+        className="icon-img icon-img-mono"
+        style={{
+          width: size,
+          height: size,
+          maskImage: `url(${src})`,
+          WebkitMaskImage: `url(${src})`,
+        }}
+      >
+        {/* Hidden probe: reuses the browser's own request so a broken URL still falls back. */}
+        <img src={src} alt="" aria-hidden="true" style={{ display: 'none' }} onError={() => setHasError(true)} />
+      </span>
     );
   }
   return <IconAppWindow width={size} height={size} strokeWidth={1.6} aria-label={alt} />;

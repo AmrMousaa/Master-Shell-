@@ -5,6 +5,7 @@
 
 // Models
 export * as CommonModels from './models/CommonModels';
+export * as MicrosoftDataverseModel from './models/MicrosoftDataverseModel';
 export * as Pulse_apppermissionsModel from './models/Pulse_apppermissionsModel';
 export * as Pulse_appsModel from './models/Pulse_appsModel';
 export * as Pulse_appusagestatsesModel from './models/Pulse_appusagestatsesModel';
@@ -15,6 +16,7 @@ export * as RolesModel from './models/RolesModel';
 export * as SystemusersModel from './models/SystemusersModel';
 
 // Services
+export * from './services/MicrosoftDataverseService';
 export * from './services/Pulse_apppermissionsService';
 export * from './services/Pulse_appsService';
 export * from './services/Pulse_appusagestatsesService';

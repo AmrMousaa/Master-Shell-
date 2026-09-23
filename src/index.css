@@ -1,50 +1,182 @@
+/* =========================================================================
+   Synapse / HMIS Design System — design tokens (--ds-*)
+   Token-first: colors, type, spacing, radius, shadow and motion primitives.
+   ========================================================================= */
 :root {
-  --gold-600: #28170c;
-  --gold-500: #a08561;
-  --gold-400: #d8c7ac;
-  --gold-300: #efe2ce;
-  --gold-200: #e6dbcd;
-  --gold-100: #f8e5ca;
-  --gold-50: #fbf8f5;
-
-  --green-600: #2e372d;
-  --green-500: #49604c;
-  --green-400: #516d4e;
-  --green-300: #a4a996;
-  --green-100: #f6f7f0;
-
-  --black-600: #211c1e;
-  --gray-500: #707070;
-  --gray-400: #d9d9d9;
-  --gray-300: #eae5dc;
-  --cream: #fbf8f5;
-  --white: #ffffff;
-  --surface: rgba(255, 255, 255, 0.7);
-
-  --red-500: #c2453f;
-  --red-100: #fbeae9;
-  --live-500: #3e8e5a;
-
-  --up: #2e9e4f;
-  --up-bg: #e7f6ec;
-  --down: #c2453f;
-  --down-bg: #fbeae9;
-
-  --sidebar-w: 270px;
-  --sidebar-w-collapsed: 72px;
-  --serif: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --tr: 220ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  --radius-sm: 9px;
-  --radius-md: 14px;
-  --radius-lg: 16px;
-  --shadow-sm: 0 4px 12px rgba(33, 28, 30, 0.08);
-  --shadow-md: 0 16px 30px rgba(160, 133, 97, 0.16);
-  --shadow-lg: 12px 0 32px rgba(33, 28, 30, 0.18);
-  --shadow-xl: 0 16px 40px rgba(33, 28, 30, 0.16);
-
   color-scheme: light;
+
+  /* ---------- Primary (Teal) — system / deterministic lane ---------- */
+  --ds-color-primary-50: #f0faf7;
+  --ds-color-primary-100: #d9f3ea;
+  --ds-color-primary-200: #b7e7d7;
+  --ds-color-primary-300: #82d2ba;
+  --ds-color-primary-400: #4bb69a;
+  --ds-color-primary-500: #278f76;
+  --ds-color-primary-600: #126e5c;
+  --ds-color-primary-700: #0d594b;
+  --ds-color-primary-800: #0a463c;
+  --ds-color-primary-900: #073a33;
+  --ds-color-primary-950: #03251f;
+  --ds-color-primary: var(--ds-color-primary-600);
+  --ds-color-primary-deep: #023635;
+  --ds-color-primary-soft: #d9f8ec;
+  --ds-color-primary-mint: #40ffb8;
+  --ds-color-primary-line: rgba(18, 110, 92, 0.14);
+
+  /* ---------- Neutral ---------- */
+  --ds-color-neutral-50: #f8fafc;
+  --ds-color-neutral-100: #f1f5f9;
+  --ds-color-neutral-200: #e2e8f0;
+  --ds-color-neutral-300: #cbd5e1;
+  --ds-color-neutral-400: #94a3b8;
+  --ds-color-neutral-500: #64748b;
+  --ds-color-neutral-600: #475569;
+  --ds-color-neutral-700: #334155;
+  --ds-color-neutral-800: #1e293b;
+  --ds-color-neutral-900: #0f172a;
+
+  /* ---------- Analytics (Teal) — reporting / KPI lane ---------- */
+  --ds-color-analytics-50: var(--ds-color-primary-50);
+  --ds-color-analytics-100: var(--ds-color-primary-100);
+  --ds-color-analytics-200: var(--ds-color-primary-200);
+  --ds-color-analytics-300: var(--ds-color-primary-300);
+  --ds-color-analytics-400: var(--ds-color-primary-400);
+  --ds-color-analytics-500: var(--ds-color-primary-500);
+  --ds-color-analytics-600: var(--ds-color-primary-600);
+  --ds-color-analytics-700: var(--ds-color-primary-700);
+  --ds-color-analytics-800: var(--ds-color-primary-800);
+  --ds-color-analytics-900: var(--ds-color-primary-900);
+  --ds-color-analytics: var(--ds-color-analytics-500);
+  --ds-color-analytics-deep: var(--ds-color-primary-deep);
+  --ds-color-analytics-soft: var(--ds-color-primary-soft);
+  --ds-color-analytics-line: var(--ds-color-primary-line);
+
+  /* ---------- AI (Purple) — predictive / generative lane ---------- */
+  --ds-color-ai-50: #faf8ff;
+  --ds-color-ai-100: #eee9fb;
+  --ds-color-ai-200: #dcd2f6;
+  --ds-color-ai-300: #c5b3ee;
+  --ds-color-ai-400: #aa91e6;
+  --ds-color-ai-500: #8d73de;
+  --ds-color-ai-600: #7459c7;
+  --ds-color-ai-700: #6046aa;
+  --ds-color-ai-800: #4e398a;
+  --ds-color-ai-900: #402f70;
+  --ds-color-ai: var(--ds-color-ai-500);
+  --ds-color-ai-deep: #6046aa;
+  --ds-color-ai-soft: #eee9fb;
+  --ds-color-ai-line: rgba(112, 82, 187, 0.2);
+
+  /* ---------- Generic status ---------- */
+  --ds-color-success: #10b981;
+  --ds-color-success-soft: #ecfdf5;
+  --ds-color-warning: #f59e0b;
+  --ds-color-warning-soft: #fffbeb;
+  --ds-color-danger: #ef4444;
+  --ds-color-danger-soft: #fef2f2;
+  --ds-color-info: #3b82f6;
+  --ds-color-info-soft: #eff6ff;
+
+  /* ---------- Clinical / workflow status tones ---------- */
+  --ds-tone-routine-text: #526762;
+  --ds-tone-routine-bg: rgba(211, 222, 218, 0.72);
+  --ds-tone-high-text: #8f5c0d;
+  --ds-tone-high-bg: rgba(255, 225, 160, 0.55);
+  --ds-tone-urgent-text: #a23e3e;
+  --ds-tone-urgent-bg: rgba(255, 196, 196, 0.55);
+  --ds-tone-pending-text: #785e14;
+  --ds-tone-pending-bg: rgba(255, 226, 145, 0.46);
+  --ds-tone-awaiting-text: #6b4e82;
+  --ds-tone-awaiting-bg: rgba(226, 214, 240, 0.6);
+  --ds-tone-success-text: #176148;
+  --ds-tone-success-bg: rgba(64, 255, 184, 0.2);
+  --ds-tone-confirmed-text: #185c67;
+  --ds-tone-confirmed-bg: rgba(185, 230, 235, 0.55);
+  --ds-tone-draft-text: #67736f;
+  --ds-tone-draft-bg: rgba(211, 218, 216, 0.75);
+  --ds-tone-error-text: #dc2626;
+  --ds-tone-error-bg: #fef2f2;
+  --ds-tone-info-text: #185c67;
+  --ds-tone-info-bg: rgba(185, 230, 235, 0.4);
+
+  /* ---------- Surfaces & text ---------- */
+  --ds-color-surface-raised: #ffffff;
+  --ds-color-surface-muted: #f5f7f6;
+  --ds-color-surface-recessed: #f1f5f9;
+  --ds-color-surface-hover: #f1f5f9;
+  --ds-color-surface-selected: #eff8f4;
+  --ds-color-surface-overlay: rgba(3, 17, 15, 0.58);
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: rgba(15, 23, 42, 0.1);
+  --ds-color-text-primary: var(--ink);
+  --ds-color-text-secondary: var(--muted);
+  --ds-color-text-inverse: #ffffff;
+  --ds-color-border: var(--line);
+  --ds-color-border-strong: rgba(26, 74, 66, 0.14);
+
+  /* ---------- Typography ---------- */
+  --ds-font-family: 'Urbanist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --ds-font-display: clamp(26px, 2.4vw, 38px);
+  --ds-font-page-title: clamp(19px, 1.65vw, 24px);
+  --ds-font-intro-title: clamp(18px, 1.45vw, 20px);
+  --ds-font-section-title: 18px;
+  --ds-font-card-title: 16px;
+  --ds-font-item-title: 14px;
+  --ds-font-body: 14px;
+  --ds-font-label: 14px;
+  --ds-font-table: 14px;
+  --ds-font-caption: 13px;
+  --ds-font-metric-label: 12px;
+  --ds-font-eyebrow: 12px;
+  --ds-lh-tight: 1.2;
+  --ds-lh-body: 1.5;
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --ds-space-2xs: 4px;
+  --ds-space-xs: 4px;
+  --ds-space-sm: 8px;
+  --ds-space-md: 16px;
+  --ds-space-lg: 16px;
+  --ds-space-xl: 24px;
+  --ds-space-2xl: 32px;
+  --ds-space-3xl: 48px;
+
+  /* ---------- Radius ---------- */
+  --ds-radius-squircle-lg: 16px;
+  --ds-radius-squircle-sm: 12px;
+  --ds-radius-control: 8px;
+  --ds-radius-tag: 4px;
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 16px;
+  --ds-radius-pill: 999px;
+  --ds-radius-circle: 50%;
+
+  /* ---------- Shadow ---------- */
+  --ds-shadow-sm: 0 13px 28px rgba(82, 82, 100, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  --ds-shadow-lg: 0 30px 70px rgba(76, 73, 105, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --ds-shadow-button: 0 10px 22px rgba(2, 54, 53, 0.17), inset 0 1px 0 rgba(255, 255, 255, 0.13);
+  --ds-shadow-button-hover: 0 13px 28px rgba(2, 54, 53, 0.23);
+  --ds-shadow-dialog: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* ---------- Motion ---------- */
+  --ds-ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ds-ease-exit: cubic-bezier(0.4, 0, 0.7, 0.2);
+  --ds-duration-fast: 180ms;
+  --ds-duration-base: 300ms;
+  --ds-duration-slow: 460ms;
+  --ds-duration-overlay: 560ms;
+  --tr: var(--ds-duration-base) var(--ds-ease-enter);
+
+  /* ---------- Focus ring ---------- */
+  --ds-clinical-focus: rgba(18, 110, 92, 0.18);
+
+  /* ---------- App shell layout ---------- */
+  --ds-sidebar-w: 272px;
+  --ds-sidebar-w-collapsed: 72px;
+  --ds-topbar-h: 68px;
 }
 
 * {
@@ -61,14 +193,15 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: var(--sans);
-  background: #fdfbf8;
-  background-image: radial-gradient(50% 40% at 85% -5%, rgba(160, 133, 97, 0.14), transparent 70%),
-    radial-gradient(45% 35% at -5% 30%, rgba(73, 96, 76, 0.1), transparent 70%),
-    radial-gradient(40% 30% at 60% 90%, rgba(160, 133, 97, 0.08), transparent 70%);
+  font-family: var(--ds-font-family);
+  font-weight: 400;
+  background: var(--ds-color-neutral-50);
+  background-image: radial-gradient(46% 38% at 88% -6%, rgba(64, 255, 184, 0.14), transparent 70%),
+    radial-gradient(40% 32% at -4% 12%, rgba(141, 115, 222, 0.09), transparent 70%),
+    radial-gradient(38% 30% at 60% 100%, rgba(201, 155, 59, 0.08), transparent 70%);
   background-attachment: fixed;
-  color: var(--black-600);
-  line-height: 1.5;
+  color: var(--ds-color-text-primary);
+  line-height: var(--ds-lh-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -77,13 +210,15 @@ button {
   font-family: inherit;
 }
 
-input {
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
 ::selection {
-  background: var(--gold-300);
-  color: var(--gold-600);
+  background: var(--ds-color-primary-soft);
+  color: var(--ds-color-primary-deep);
 }
 
 ::-webkit-scrollbar {
@@ -96,11 +231,22 @@ input {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: 999px;
-  border: 2px solid var(--cream);
+  background: var(--ds-color-neutral-300);
+  border-radius: var(--ds-radius-pill);
+  border: 2px solid var(--ds-color-neutral-50);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
+  background: var(--ds-color-neutral-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

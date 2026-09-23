@@ -11,41 +11,76 @@ export interface CurrentUserAccess {
   roleIds: Set<string>;
 }
 
+// The signed-in user's Dataverse id never changes mid-session, but
+// getCurrentUserId() is called on nearly every data operation (favorites,
+// permissions, usage tracking, ...). Resolving it fresh each time added an
+// extra cross-environment round trip to every one of those calls, which is
+// exactly the kind of latency that made the app-launch usage tracking race
+// (see launchApp.ts) lose against navigation. Cache the in-flight/resolved
+// lookup so it only ever happens once per session.
+let currentUserIdPromise: Promise<string> | null = null;
+
 export async function getCurrentUserId(): Promise<string> {
-  const context = await getContext();
-  const azureObjectId = context.user.objectId;
-  if (!azureObjectId) {
-    throw new Error('Unable to determine the current user.');
-  }
+  if (!currentUserIdPromise) {
+    currentUserIdPromise = (async () => {
+      const context = await getContext();
+      const azureObjectId = context.user.objectId;
+      if (!azureObjectId) {
+        throw new Error('Unable to determine the current user.');
+      }
 
-  const userResult = await SystemusersService.getAll({
-    filter: `azureactivedirectoryobjectid eq ${azureObjectId}`,
-  });
-  if (!userResult.success || !userResult.data) {
-    throw new Error(userResult.error?.message ?? 'Failed to load the current user.');
-  }
-  const currentUser = userResult.data[0];
-  if (!currentUser) {
-    throw new Error('The current user was not found in Dataverse.');
-  }
+      const userResult = await SystemusersService.getAll({
+        filter: `azureactivedirectoryobjectid eq ${azureObjectId}`,
+        select: ['systemuserid'],
+      });
+      if (!userResult.success || !userResult.data) {
+        throw new Error(userResult.error?.message ?? 'Failed to load the current user.');
+      }
+      const currentUser = userResult.data[0];
+      if (!currentUser) {
+        throw new Error('The current user was not found in Dataverse.');
+      }
 
-  return currentUser.systemuserid;
+      return currentUser.systemuserid;
+    })().catch((err) => {
+      // Don't cache a failed lookup — let the next call retry.
+      currentUserIdPromise = null;
+      throw err;
+    });
+  }
+  return currentUserIdPromise;
 }
 
+// Like getCurrentUserId above, the user's role membership doesn't change
+// mid-session. Without caching, hasAnalyticsAccess/hasPulseAdminAccess/
+// useNavigationData each triggered their own "get my roles" cross-env round
+// trip on every app load. Cache the resolved access so it's fetched once.
+let currentUserAccessPromise: Promise<CurrentUserAccess> | null = null;
+
 export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
-  const userId = await getCurrentUserId();
+  if (!currentUserAccessPromise) {
+    currentUserAccessPromise = (async () => {
+      const userId = await getCurrentUserId();
 
-  const rolesResult = await RolesService.getAll({
-    filter: `systemuserroles_association/any(su:su/systemuserid eq ${userId})`,
-  });
-  if (!rolesResult.success || !rolesResult.data) {
-    throw new Error(rolesResult.error?.message ?? "Failed to load the current user's roles.");
+      const rolesResult = await RolesService.getAll({
+        filter: `systemuserroles_association/any(su:su/systemuserid eq ${userId})`,
+        select: ['roleid', 'name'],
+      });
+      if (!rolesResult.success || !rolesResult.data) {
+        throw new Error(rolesResult.error?.message ?? "Failed to load the current user's roles.");
+      }
+
+      const roleIds = new Set(rolesResult.data.map((role) => role.roleid));
+      const isSystemAdministrator = rolesResult.data.some((role) => role.name === SYSTEM_ADMINISTRATOR_ROLE_NAME);
+
+      return { isSystemAdministrator, roleIds };
+    })().catch((err) => {
+      // Don't cache a failed lookup — let the next call retry.
+      currentUserAccessPromise = null;
+      throw err;
+    });
   }
-
-  const roleIds = new Set(rolesResult.data.map((role) => role.roleid));
-  const isSystemAdministrator = rolesResult.data.some((role) => role.name === SYSTEM_ADMINISTRATOR_ROLE_NAME);
-
-  return { isSystemAdministrator, roleIds };
+  return currentUserAccessPromise;
 }
 
 export async function hasAnalyticsAccess(): Promise<boolean> {
@@ -55,6 +90,7 @@ export async function hasAnalyticsAccess(): Promise<boolean> {
 
     const rolesResult = await RolesService.getAll({
       filter: `name eq '${ANALYTICS_VIEWER_ROLE_NAME}'`,
+      select: ['roleid'],
     });
     if (!rolesResult.success || !rolesResult.data) return false;
 
@@ -74,6 +110,7 @@ export async function hasPulseAdminAccess(): Promise<boolean> {
 
     const rolesResult = await RolesService.getAll({
       filter: `name eq '${PULSE_ADMIN_ROLE_NAME}'`,
+      select: ['roleid'],
     });
     if (!rolesResult.success || !rolesResult.data) return false;
 

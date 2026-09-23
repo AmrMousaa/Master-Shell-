@@ -1,61 +1,25 @@
 {
   "version": "1.0",
-  "appId": "dafd6182-37bc-4c71-ae37-021ec815a79b",
+  "appId": "2ffd8322-d1f1-4ffe-ac86-339fc6818a7b",
   "appDisplayName": "Andalusia Pulse",
   "region": "prod",
   "appType": "CodeApp",
-  "environmentId": "ce6c79ed-8940-e233-9680-22f2006a255d",
+  "environmentId": "cd78a59b-e16f-e4aa-b0a1-8e450a70ed56",
   "description": " ",
   "buildPath": "./dist",
   "buildEntryPoint": "index.html",
   "localAppUrl": "http://localhost:3000",
   "logoPath": "Default",
-  "connectionReferences": {},
-  "databaseReferences": {
-    "default.cds": {
-      "dataSources": {
-        "modules": {
-          "entitySetName": "pulse_modules",
-          "logicalName": "pulse_module",
-          "isHidden": false
-        },
-        "apps": {
-          "entitySetName": "pulse_apps",
-          "logicalName": "pulse_app",
-          "isHidden": false
-        },
-        "securityroles": {
-          "entitySetName": "roles",
-          "logicalName": "role",
-          "isHidden": false
-        },
-        "apppermissions": {
-          "entitySetName": "pulse_apppermissions",
-          "logicalName": "pulse_apppermission",
-          "isHidden": false
-        },
-        "users": {
-          "entitySetName": "systemusers",
-          "logicalName": "systemuser",
-          "isHidden": false
-        },
-        "favorites": {
-          "entitySetName": "pulse_favorites",
-          "logicalName": "pulse_favorite",
-          "isHidden": false
-        },
-        "appuserlastused": {
-          "entitySetName": "pulse_appuserlastuseds",
-          "logicalName": "pulse_appuserlastused",
-          "isHidden": false
-        },
-        "appusagestats": {
-          "entitySetName": "pulse_appusagestatses",
-          "logicalName": "pulse_appusagestats",
-          "isHidden": false
-        }
-      },
-      "environmentVariableName": ""
+  "connectionReferences": {
+    "3133863e-df6e-4bbb-aafc-b6851b6a9327": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+      "displayName": "Microsoft Dataverse",
+      "dataSources": [
+        "commondataserviceforapps"
+      ],
+      "authenticationType": "Oauth",
+      "dataSets": {}
     }
-  }
+  },
+  "databaseReferences": {}
 }

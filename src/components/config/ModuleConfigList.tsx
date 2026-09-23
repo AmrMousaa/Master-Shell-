@@ -10,6 +10,7 @@ interface ModuleConfigListProps {
   modules: Pulse_modules[];
   appCountByModuleId: Map<string, number>;
   activeAppCountByModuleId: Map<string, number>;
+  searchActive?: boolean;
   onAdd: () => void;
   onEdit: (module: Pulse_modules) => void;
   onDeactivate: (module: Pulse_modules) => Promise<void>;
@@ -20,6 +21,7 @@ export function ModuleConfigList({
   modules,
   appCountByModuleId,
   activeAppCountByModuleId,
+  searchActive = false,
   onAdd,
   onEdit,
   onDeactivate,
@@ -63,80 +65,96 @@ export function ModuleConfigList({
       {modules.length === 0 ? (
         <div className="empty-state">
           <IconInbox width={26} height={26} aria-hidden="true" />
-          <p>No modules have been configured yet.</p>
+          <p>{searchActive ? 'No modules match your search.' : 'No modules have been configured yet.'}</p>
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <SortableContext items={modules.map((m) => m.pulse_moduleid)} strategy={verticalListSortingStrategy}>
-            <div className="cfg-list">
-              {modules.map((module) => {
-                const isActive = module.statecode === 0;
-                const appCount = appCountByModuleId.get(module.pulse_moduleid) ?? 0;
-                const activeAppCount = activeAppCountByModuleId.get(module.pulse_moduleid) ?? 0;
-                const isConfirming = confirmingId === module.pulse_moduleid;
-                const isPending = pendingId === module.pulse_moduleid;
+        (() => {
+          const rows = modules.map((module) => {
+            const isActive = module.statecode === 0;
+            const appCount = appCountByModuleId.get(module.pulse_moduleid) ?? 0;
+            const activeAppCount = activeAppCountByModuleId.get(module.pulse_moduleid) ?? 0;
+            const isConfirming = confirmingId === module.pulse_moduleid;
+            const isPending = pendingId === module.pulse_moduleid;
 
-                return (
-                  <SortableRow key={module.pulse_moduleid} id={module.pulse_moduleid}>
-                    {({ attributes, listeners, isDragging }) => (
-                      <div className={`cfg-row${isActive ? '' : ' cfg-row-inactive'}${isDragging ? ' cfg-row-dragging' : ''}`}>
-                        <span className="cfg-drag-handle" {...attributes} {...listeners} aria-label="Drag to reorder">
-                          <IconGripVertical width={16} height={16} aria-hidden="true" />
+            const rowBody = (attributes?: object, listeners?: object, isDragging?: boolean) => (
+              <div className={`cfg-row${isActive ? '' : ' cfg-row-inactive'}${isDragging ? ' cfg-row-dragging' : ''}`}>
+                {!searchActive && (
+                  <span className="cfg-drag-handle" {...attributes} {...listeners} aria-label="Drag to reorder">
+                    <IconGripVertical width={16} height={16} aria-hidden="true" />
+                  </span>
+                )}
+                <span className="cfg-row-icon">
+                  <Icon src={module.pulse_iconurl} alt={module.pulse_name ?? 'Module'} size={22} />
+                </span>
+                <div className="cfg-row-main">
+                  <div className="cfg-row-name">{module.pulse_name}</div>
+                  {module.pulse_description && <div className="cfg-row-desc">{module.pulse_description}</div>}
+                </div>
+                <span className="cfg-row-meta">
+                  {appCount} {appCount === 1 ? 'app' : 'apps'}
+                </span>
+                <span className={`cfg-badge${isActive ? ' active' : ' inactive'}`}>{isActive ? 'Active' : 'Inactive'}</span>
+                <div className="cfg-row-actions">
+                  <button type="button" className="cfg-link-btn" onClick={() => onEdit(module)}>
+                    Edit
+                  </button>
+                  {isActive &&
+                    (isConfirming ? (
+                      <span className="cfg-confirm">
+                        <span>
+                          {activeAppCount > 0
+                            ? `This module has ${activeAppCount} active ${activeAppCount === 1 ? 'app' : 'apps'}. Deactivate anyway?`
+                            : 'Deactivate this module?'}
                         </span>
-                        <span className="cfg-row-icon">
-                          <Icon src={module.pulse_iconurl} alt={module.pulse_name ?? 'Module'} size={22} />
-                        </span>
-                        <div className="cfg-row-main">
-                          <div className="cfg-row-name">{module.pulse_name}</div>
-                          {module.pulse_description && <div className="cfg-row-desc">{module.pulse_description}</div>}
-                        </div>
-                        <span className="cfg-row-meta">
-                          {appCount} {appCount === 1 ? 'app' : 'apps'}
-                        </span>
-                        <span className={`cfg-badge${isActive ? ' active' : ' inactive'}`}>{isActive ? 'Active' : 'Inactive'}</span>
-                        <div className="cfg-row-actions">
-                          <button type="button" className="cfg-link-btn" onClick={() => onEdit(module)}>
-                            Edit
-                          </button>
-                          {isActive &&
-                            (isConfirming ? (
-                              <span className="cfg-confirm">
-                                <span>
-                                  {activeAppCount > 0
-                                    ? `This module has ${activeAppCount} active ${activeAppCount === 1 ? 'app' : 'apps'}. Deactivate anyway?`
-                                    : 'Deactivate this module?'}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="cfg-link-btn cfg-link-danger"
-                                  disabled={isPending}
-                                  onClick={() => confirmDeactivate(module)}
-                                >
-                                  {isPending ? 'Deactivating…' : 'Confirm'}
-                                </button>
-                                <button type="button" className="cfg-link-btn" onClick={() => setConfirmingId(null)}>
-                                  Cancel
-                                </button>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                className="cfg-link-btn cfg-link-danger"
-                                onClick={() => setConfirmingId(module.pulse_moduleid)}
-                              >
-                                <IconArchive width={13} height={13} aria-hidden="true" />
-                                Deactivate
-                              </button>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-                  </SortableRow>
-                );
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
+                        <button
+                          type="button"
+                          className="cfg-link-btn cfg-link-danger"
+                          disabled={isPending}
+                          onClick={() => confirmDeactivate(module)}
+                        >
+                          {isPending ? 'Deactivating…' : 'Confirm'}
+                        </button>
+                        <button type="button" className="cfg-link-btn" onClick={() => setConfirmingId(null)}>
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="cfg-link-btn cfg-link-danger"
+                        onClick={() => setConfirmingId(module.pulse_moduleid)}
+                      >
+                        <IconArchive width={13} height={13} aria-hidden="true" />
+                        Deactivate
+                      </button>
+                    ))}
+                </div>
+              </div>
+            );
+
+            if (searchActive) {
+              return <div key={module.pulse_moduleid}>{rowBody()}</div>;
+            }
+
+            return (
+              <SortableRow key={module.pulse_moduleid} id={module.pulse_moduleid}>
+                {({ attributes, listeners, isDragging }) => rowBody(attributes, listeners, isDragging)}
+              </SortableRow>
+            );
+          });
+
+          if (searchActive) {
+            return <div className="cfg-list">{rows}</div>;
+          }
+
+          return (
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+              <SortableContext items={modules.map((m) => m.pulse_moduleid)} strategy={verticalListSortingStrategy}>
+                <div className="cfg-list">{rows}</div>
+              </SortableContext>
+            </DndContext>
+          );
+        })()
       )}
     </div>
   );

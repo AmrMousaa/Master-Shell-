@@ -30,7 +30,7 @@ export function useAppPermissions(appId: string | undefined) {
     try {
       const [permissionsResult, rolesResult] = await Promise.all([
         Pulse_apppermissionsService.getAll({ filter: `_pulse_app_value eq ${appId}` }),
-        RolesService.getAll(),
+        RolesService.getAll({ select: ['roleid', 'name'] }),
       ]);
       if (!permissionsResult.success || !permissionsResult.data) {
         throw new Error(permissionsResult.error?.message ?? 'Failed to load app permissions.');
@@ -104,7 +104,18 @@ export function useAppPermissions(appId: string | undefined) {
     setState((prev) => ({ ...prev, permissions: permissionsRef.current }));
   }, []);
 
-  const activePermissions = state.permissions.filter((p) => p.statecode === 0);
+  // The Dataverse connector's raw REST response doesn't get flattened into the
+  // "<lookup>name" display fields the way the old native SDK client did, so
+  // pulse_securityrolename can't be trusted here. Resolve each permission's
+  // role name from the already-loaded role list instead.
+  const roleNameById = new Map(state.allRoles.map((role) => [role.roleid, role.name]));
+
+  const activePermissions = state.permissions
+    .filter((p) => p.statecode === 0)
+    .map((p) => ({
+      ...p,
+      pulse_securityrolename: (p._pulse_securityrole_value && roleNameById.get(p._pulse_securityrole_value)) || p.pulse_securityrolename,
+    }));
   const activeRoleIds = new Set(activePermissions.map((p) => p._pulse_securityrole_value).filter((id): id is string => Boolean(id)));
   const availableRoles = state.allRoles.filter((role) => !activeRoleIds.has(role.roleid));
 

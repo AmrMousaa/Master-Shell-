@@ -41,9 +41,13 @@ interface UsageAnalyticsState {
   totalAppsCount: number;
   uniqueUsersByApp: AppUniqueUsers[];
   clicksByModule: ModuleClicks[];
+  lastUpdated: number | null;
+  isRefreshing: boolean;
 }
 
-const ACTIVE_APPS_FILTER = 'pulse_isactive eq true';
+const AUTO_REFRESH_MS = 45_000;
+
+const ACTIVE_APPS_FILTER = 'statecode eq 0';
 
 function toDateOnly(date: Date): string {
   const year = date.getFullYear();
@@ -72,6 +76,8 @@ const INITIAL_STATE: UsageAnalyticsState = {
   totalAppsCount: 0,
   uniqueUsersByApp: [],
   clicksByModule: [],
+  lastUpdated: null,
+  isRefreshing: false,
 };
 
 export function useUsageAnalytics(filters: UsageFilters) {
@@ -79,8 +85,13 @@ export function useUsageAnalytics(filters: UsageFilters) {
 
   const { moduleId, startDate, endDate } = filters;
 
-  const load = useCallback(async () => {
-    setState((prev) => ({ ...prev, status: 'loading', error: undefined }));
+  const load = useCallback(async (silent = false) => {
+    setState((prev) => ({
+      ...prev,
+      status: silent ? prev.status : 'loading',
+      isRefreshing: silent,
+      error: undefined,
+    }));
     try {
       const startDateOnly = toDateOnly(startDate);
       const endDateOnly = toDateOnly(endDate);
@@ -139,10 +150,12 @@ export function useUsageAnalytics(filters: UsageFilters) {
         }
       }
 
+      // Unbounded: the dashboard itself caps the panel to a handful of rows
+      // and puts the rest behind "See More", so the hook returns everything
+      // rather than pre-truncating the list.
       const topApps: TopApp[] = Array.from(clicksByApp.entries())
         .map(([appId, totalClicks]) => ({ appId, appName: appNameById.get(appId) ?? 'Unknown app', totalClicks }))
-        .sort((a, b) => b.totalClicks - a.totalClicks)
-        .slice(0, 10);
+        .sort((a, b) => b.totalClicks - a.totalClicks);
 
       const dailyTrend: DailyTrendPoint[] = enumerateDates(startDate, endDate).map((date) => ({
         date,
@@ -186,11 +199,14 @@ export function useUsageAnalytics(filters: UsageFilters) {
         totalAppsCount,
         uniqueUsersByApp,
         clicksByModule,
+        lastUpdated: Date.now(),
+        isRefreshing: false,
       });
     } catch (err) {
       setState((prev) => ({
         ...prev,
         status: 'error',
+        isRefreshing: false,
         error: err instanceof Error ? err.message : 'Something went wrong while loading usage analytics.',
       }));
     }
@@ -201,5 +217,16 @@ export function useUsageAnalytics(filters: UsageFilters) {
     load();
   }, [load]);
 
-  return { ...state, retry: load };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+      }
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  const retry = useCallback(() => load(false), [load]);
+
+  return { ...state, retry };
 }

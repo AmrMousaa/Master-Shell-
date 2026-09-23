@@ -30,18 +30,10 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    hasAnalyticsAccess().then((allowed) => {
-      if (!cancelled) setCanViewAnalytics(allowed);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    hasPulseAdminAccess().then((allowed) => {
-      if (!cancelled) setCanManagePulseConfig(allowed);
+    Promise.all([hasAnalyticsAccess(), hasPulseAdminAccess()]).then(([canAnalytics, canPulseAdmin]) => {
+      if (cancelled) return;
+      setCanViewAnalytics(canAnalytics);
+      setCanManagePulseConfig(canPulseAdmin);
     });
     return () => {
       cancelled = true;
@@ -133,7 +125,7 @@ function App() {
 
   let content: React.ReactNode;
   if (view.kind === 'pulseConfig' && canManagePulseConfig) {
-    content = <PulseConfigScreen onBack={goHome} onError={setToastMessage} />;
+    content = <PulseConfigScreen searchQuery={searchQuery} onBack={goHome} onError={setToastMessage} />;
   } else if (status === 'loading') {
     content = <LoadingState />;
   } else if (status === 'error') {

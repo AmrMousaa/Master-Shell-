@@ -10,9 +10,15 @@ function todayDateOnly(): string {
   return `${year}-${month}-${day}`;
 }
 
+// Each of these is a read-then-write (get-to-check-existence, then a
+// conditional create/update) — two cross-env round trips per call. This could
+// collapse to a single upsert if `pulse_appusagestatses` gets an alternate
+// key on (app, date) and `pulse_appuserlastuseds` one on (app, user); without
+// a configured alternate key there's no record id to upsert against.
 async function recordDailyClick(appId: string, today: string): Promise<void> {
   const existingResult = await Pulse_appusagestatsesService.getAll({
     filter: `_pulse_app_value eq ${appId} and pulse_date eq ${today}`,
+    select: ['pulse_appusagestatsid', 'pulse_clickcount'],
   });
   if (!existingResult.success) {
     throw new Error(existingResult.error?.message ?? 'Failed to look up today\'s usage stat.');
@@ -47,6 +53,7 @@ async function recordDailyClick(appId: string, today: string): Promise<void> {
 async function recordLastUsed(appId: string, userId: string, today: string): Promise<void> {
   const existingResult = await Pulse_appuserlastusedsService.getAll({
     filter: `_pulse_app_value eq ${appId} and _pulse_user_value eq ${userId}`,
+    select: ['pulse_appuserlastusedid'],
   });
   if (!existingResult.success) {
     throw new Error(existingResult.error?.message ?? 'Failed to look up last-used record.');

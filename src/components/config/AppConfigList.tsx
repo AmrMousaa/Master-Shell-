@@ -14,6 +14,7 @@ interface AppConfigListProps {
   moduleNameById: Map<string, string>;
   roleCountByAppId: Map<string, number>;
   favoriteCountByAppId: Map<string, number>;
+  searchActive?: boolean;
   onAdd: () => void;
   onEdit: (app: Pulse_apps) => void;
   onDeactivate: (app: Pulse_apps) => Promise<void>;
@@ -27,6 +28,7 @@ export function AppConfigList({
   moduleNameById,
   roleCountByAppId,
   favoriteCountByAppId,
+  searchActive = false,
   onAdd,
   onEdit,
   onDeactivate,
@@ -68,7 +70,7 @@ export function AppConfigList({
     });
   }, [apps, moduleFilter, moduleNameById]);
 
-  const canReorder = Boolean(moduleFilter);
+  const canReorder = Boolean(moduleFilter) && !searchActive;
 
   async function handleDragEnd(event: DragEndEvent) {
     if (!canReorder) return;

@@ -3,7 +3,7 @@ import { Pulse_favoritesService } from '../generated/services/Pulse_favoritesSer
 import type { Pulse_favorites, Pulse_favoritesBase } from '../generated/models/Pulse_favoritesModel';
 import { getCurrentUserId } from '../services/currentUserAccess';
 
-export const MAX_FAVORITES = 6;
+export const MAX_FAVORITES = 5;
 
 const ACTIVE_FILTER = 'statecode eq 0';
 const ORDER_BY = ['pulse_order asc'];
@@ -119,13 +119,15 @@ export function useFavorites() {
         await Pulse_favoritesService.delete(favoriteId);
       }
 
-      const changed = resequenced.filter((favorite, index) => favorite.pulse_order !== (remaining[index].pulse_order ?? 0));
-      for (const favorite of changed) {
-        if (favorite.pulse_favoriteid.startsWith('temp-')) continue;
-        const result = await Pulse_favoritesService.update(favorite.pulse_favoriteid, { pulse_order: favorite.pulse_order });
-        if (!result.success) {
-          throw new Error(result.error?.message ?? 'Failed to reorder favorites.');
-        }
+      const changed = resequenced.filter(
+        (favorite, index) => !favorite.pulse_favoriteid.startsWith('temp-') && favorite.pulse_order !== (remaining[index].pulse_order ?? 0)
+      );
+      const results = await Promise.all(
+        changed.map((favorite) => Pulse_favoritesService.update(favorite.pulse_favoriteid, { pulse_order: favorite.pulse_order }))
+      );
+      const failed = results.find((result) => !result.success);
+      if (failed) {
+        throw new Error(failed.error?.message ?? 'Failed to reorder favorites.');
       }
     } catch (err) {
       favoritesRef.current = snapshot;

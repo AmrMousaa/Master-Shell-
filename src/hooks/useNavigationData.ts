@@ -19,7 +19,7 @@ interface NavigationDataState {
   modulesById: Map<string, ModuleWithApps>;
 }
 
-const ACTIVE_FILTER = 'pulse_isactive eq true';
+const ACTIVE_FILTER = 'statecode eq 0';
 const ORDER_BY = ['pulse_order asc'];
 const ACTIVE_PERMISSIONS_FILTER = 'statecode eq 0';
 
@@ -45,7 +45,9 @@ function filterAppsByAccess(
   if (access.isSystemAdministrator) return apps;
   return apps.filter((app) => {
     const requiredRoleIds = requiredRoleIdsByApp.get(app.pulse_appid);
-    if (!requiredRoleIds || requiredRoleIds.size === 0) return true;
+    // An app with no role linked to it isn't visible to anyone yet — it needs
+    // at least one Security Role assigned before it shows up in the catalog.
+    if (!requiredRoleIds || requiredRoleIds.size === 0) return false;
     for (const roleId of requiredRoleIds) {
       if (access.roleIds.has(roleId)) return true;
     }
@@ -69,12 +71,17 @@ export function useNavigationData() {
   const load = useCallback(async () => {
     setState((prev) => ({ ...prev, status: 'loading', error: undefined }));
     try {
-      const access = await getCurrentUserAccess();
-
-      const [modulesResult, appsResult, permissionsResult] = await Promise.all([
-        Pulse_modulesService.getAll({ filter: ACTIVE_FILTER, orderBy: ORDER_BY }),
+      const [access, modulesResult, appsResult, permissionsResult] = await Promise.all([
+        getCurrentUserAccess(),
+        Pulse_modulesService.getAll({
+          filter: ACTIVE_FILTER,
+          orderBy: ORDER_BY,
+          select: ['pulse_moduleid', 'pulse_name', 'pulse_iconurl', 'pulse_description', 'pulse_order'],
+        }),
         Pulse_appsService.getAll({ filter: ACTIVE_FILTER, orderBy: ORDER_BY }),
-        Pulse_apppermissionsService.getAll({ filter: ACTIVE_PERMISSIONS_FILTER }),
+        Pulse_apppermissionsService.getAll({
+          filter: ACTIVE_PERMISSIONS_FILTER,
+        }),
       ]);
 
       if (!modulesResult.success || !modulesResult.data) {

@@ -14,6 +14,7 @@ import { AppConfigList } from './AppConfigList';
 import { AppConfigForm } from './AppConfigForm';
 
 interface PulseConfigScreenProps {
+  searchQuery: string;
   onBack: () => void;
   onError: (message: string) => void;
 }
@@ -21,7 +22,7 @@ interface PulseConfigScreenProps {
 type Tab = 'modules' | 'apps';
 type SubView = { kind: 'list' } | { kind: 'module-form'; module?: Pulse_modules } | { kind: 'app-form'; app?: Pulse_apps };
 
-export function PulseConfigScreen({ onBack, onError }: PulseConfigScreenProps) {
+export function PulseConfigScreen({ searchQuery, onBack, onError }: PulseConfigScreenProps) {
   const moduleConfig = useModuleConfig();
   const appConfig = useAppConfig();
   const [tab, setTab] = useState<Tab>('modules');
@@ -93,6 +94,21 @@ export function PulseConfigScreen({ onBack, onError }: PulseConfigScreenProps) {
   }, [appConfig.apps]);
 
   const activeModules = useMemo(() => moduleConfig.modules.filter((m) => m.statecode === 0), [moduleConfig.modules]);
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredModules = useMemo(() => {
+    if (!trimmedQuery) return moduleConfig.modules;
+    return moduleConfig.modules.filter((m) => (m.pulse_name ?? '').toLowerCase().includes(trimmedQuery));
+  }, [moduleConfig.modules, trimmedQuery]);
+
+  const filteredApps = useMemo(() => {
+    if (!trimmedQuery) return appConfig.apps;
+    return appConfig.apps.filter((app) => {
+      const moduleName = moduleNameById.get(app._pulse_module_value ?? '') ?? '';
+      return (app.pulse_name ?? '').toLowerCase().includes(trimmedQuery) || moduleName.toLowerCase().includes(trimmedQuery);
+    });
+  }, [appConfig.apps, trimmedQuery, moduleNameById]);
 
   const moduleIconById = useMemo(() => {
     const map = new Map<string, string | undefined>();
@@ -216,9 +232,10 @@ export function PulseConfigScreen({ onBack, onError }: PulseConfigScreenProps) {
         />
       ) : tab === 'modules' ? (
         <ModuleConfigList
-          modules={moduleConfig.modules}
+          modules={filteredModules}
           appCountByModuleId={appCountByModuleId}
           activeAppCountByModuleId={activeAppCountByModuleId}
+          searchActive={Boolean(trimmedQuery)}
           onAdd={() => setSubView({ kind: 'module-form' })}
           onEdit={(module) => setSubView({ kind: 'module-form', module })}
           onDeactivate={handleDeactivateModule}
@@ -226,11 +243,12 @@ export function PulseConfigScreen({ onBack, onError }: PulseConfigScreenProps) {
         />
       ) : (
         <AppConfigList
-          apps={appConfig.apps}
+          apps={filteredApps}
           modules={moduleConfig.modules}
           moduleNameById={moduleNameById}
           roleCountByAppId={roleCountByAppId}
           favoriteCountByAppId={favoriteCountByAppId}
+          searchActive={Boolean(trimmedQuery)}
           onAdd={() => setSubView({ kind: 'app-form' })}
           onEdit={(app) => setSubView({ kind: 'app-form', app })}
           onDeactivate={handleDeactivateApp}
