@@ -1,19 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ModuleWithApps } from '../hooks/useNavigationData';
 import { useUsageAnalytics } from '../hooks/useUsageAnalytics';
 import type { DailyTrendPoint, ModuleClicks, TopApp } from '../hooks/useUsageAnalytics';
 import { LoadingState } from './LoadingState';
 import { ErrorState } from './ErrorState';
-import { ModuleFilterDropdown } from './ModuleFilterDropdown';
+import { ModuleMultiFilterDropdown } from './ModuleMultiFilterDropdown';
 import { DatePicker } from './DatePicker';
 import { Modal } from './Modal';
 import { IconAppWindow, IconArrowUpRight, IconBarChart, IconInbox, IconLayers, IconUser } from './icons';
 
 const PANEL_LIST_LIMIT = 6;
-
-interface UsageAnalyticsDashboardProps {
-  modulesById: Map<string, ModuleWithApps>;
-}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_RANGE_DAYS = 30;
@@ -34,14 +29,6 @@ function formatShortDate(dateOnly: string): string {
 
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function trendDelta(points: DailyTrendPoint[]): number {
-  if (points.length < 2) return 0;
-  const mid = Math.ceil(points.length / 2);
-  const firstHalf = points.slice(0, mid).reduce((sum, p) => sum + p.totalClicks, 0);
-  const secondHalf = points.slice(mid).reduce((sum, p) => sum + p.totalClicks, 0);
-  return secondHalf - firstHalf;
 }
 
 function formatTimeAgo(timestamp: number | null, now: number): string {
@@ -83,11 +70,11 @@ function useCountUp(value: number, durationMs = 650): number {
   return displayValue;
 }
 
-export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboardProps) {
+export function UsageAnalyticsDashboard() {
   const defaultEnd = useMemo(() => startOfDay(new Date()), []);
   const defaultStart = useMemo(() => new Date(defaultEnd.getTime() - (DEFAULT_RANGE_DAYS - 1) * DAY_MS), [defaultEnd]);
 
-  const [moduleId, setModuleId] = useState<string>('');
+  const [moduleIds, setModuleIds] = useState<string[]>([]);
   const [startInput, setStartInput] = useState(toDateInputValue(defaultStart));
   const [endInput, setEndInput] = useState(toDateInputValue(defaultEnd));
   const [showTopAppsModal, setShowTopAppsModal] = useState(false);
@@ -105,15 +92,18 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
     activeAppsCount,
     totalAppsCount,
     uniqueUsersByApp,
+    uniqueUsersCount,
     clicksByModule,
+    modules,
     lastUpdated,
     isRefreshing,
     retry,
-  } = useUsageAnalytics({ moduleId: moduleId || undefined, startDate, endDate });
+  } = useUsageAnalytics({ moduleIds, startDate, endDate });
 
-  const modules = Array.from(modulesById.values()).map((entry) => entry.module);
-  const totalUsers = uniqueUsersByApp.reduce((sum, entry) => sum + entry.uniqueUserCount, 0);
-  const delta = trendDelta(dailyTrend);
+  const moduleNameById = useMemo(
+    () => new Map(modules.map((m) => [m.pulse_moduleid, m.pulse_name ?? ''])),
+    [modules]
+  );
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -126,7 +116,7 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
       <div className="an-head">
         <div>
           <h1>Usage Analytics</h1>
-          <p>Most-used apps, launch trends, and unique users across the catalog.</p>
+          <p>Most-used apps, usage trends, and unique users across the catalog.</p>
         </div>
         {status === 'ready' && (
           <div className={`an-live ${isRefreshing ? 'refreshing' : ''}`} title="Auto-refreshes automatically">
@@ -137,7 +127,7 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
       </div>
 
       <div className="an-filters">
-        <ModuleFilterDropdown modules={modules} value={moduleId} onChange={setModuleId} />
+        <ModuleMultiFilterDropdown modules={modules} value={moduleIds} onChange={setModuleIds} />
         <div className="an-filter-divider" />
         <DatePicker id="an-from" label="From" value={startInput} max={endInput} onChange={setStartInput} />
         <DatePicker
@@ -157,22 +147,32 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
       ) : (
         <>
           <div className="an-stats">
-            <KpiCard label="Total launches" value={totalLaunches} delta={delta} points={dailyTrend} />
+            {/* Each sparkline plots its own card's metric per day. */}
+            <KpiCard
+              label="Total usage"
+              value={totalLaunches}
+              sparkValues={dailyTrend.map((p) => p.totalClicks)}
+              sparkTitle="Usage per day"
+            />
             <KpiCard
               label="Active apps"
               value={activeAppsCount}
-              delta={activeAppsCount - Math.max(totalAppsCount - activeAppsCount, 0)}
-              deltaSuffix=" active"
-              points={dailyTrend}
+              sparkValues={dailyTrend.map((p) => p.activeApps)}
+              sparkTitle="Apps with at least one use, per day"
             />
-            <KpiCard label="Unique users" value={totalUsers} delta={totalUsers} deltaSuffix=" reached" points={dailyTrend} />
+            <KpiCard
+              label="Unique users"
+              value={uniqueUsersCount}
+              sparkValues={dailyTrend.map((p) => p.usersReached)}
+              sparkTitle="People reached so far, each counted once on their most recent use of any app"
+            />
           </div>
 
           <div className="an-panel">
             <div className="an-panel-head">
               <h2>
                 <IconBarChart width={15} height={15} aria-hidden="true" />
-                Launch trend
+                Usage trend
               </h2>
               <span className="range">
                 {formatShortDate(toDateInputValue(startDate))} &ndash; {formatShortDate(toDateInputValue(endDate))}
@@ -219,9 +219,10 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
             </div>
           </div>
 
+          {/* The modals list everything (not just what's past the panel cap) so the ranking reads from #1. */}
           {showTopAppsModal && (
             <Modal title="Top Apps" onClose={() => setShowTopAppsModal(false)}>
-              <TopAppsList topApps={topApps.slice(PANEL_LIST_LIMIT)} />
+              <TopAppsList topApps={topApps} />
             </Modal>
           )}
 
@@ -231,7 +232,7 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
                 <span>App</span>
                 <span>Users</span>
               </div>
-              <UniqueUsersList uniqueUsersByApp={uniqueUsersByApp.slice(PANEL_LIST_LIMIT)} />
+              <UniqueUsersList uniqueUsersByApp={uniqueUsersByApp} />
             </Modal>
           )}
 
@@ -259,13 +260,13 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
                 </h2>
               </div>
               <div className="an-donut-wrap">
-                <ModuleDonutChart clicksByModule={clicksByModule} modulesById={modulesById} />
+                <ModuleDonutChart clicksByModule={clicksByModule} moduleNameById={moduleNameById} />
               </div>
             </div>
 
             <div className="an-panel">
               <div className="an-panel-head">
-                <h2>Top Apps Launches</h2>
+                <h2>Top Apps Usage</h2>
               </div>
               <div className="an-chart-wrap" style={{ height: 160 }}>
                 <TopAppsBarChart topApps={topApps.slice(0, 6)} />
@@ -281,17 +282,14 @@ export function UsageAnalyticsDashboard({ modulesById }: UsageAnalyticsDashboard
 function KpiCard({
   label,
   value,
-  delta,
-  deltaSuffix = '',
-  points,
+  sparkValues,
+  sparkTitle,
 }: {
   label: string;
   value: number;
-  delta: number;
-  deltaSuffix?: string;
-  points: DailyTrendPoint[];
+  sparkValues: number[];
+  sparkTitle: string;
 }) {
-  const isPositive = delta >= 0;
   const animatedValue = useCountUp(value);
   return (
     <div className="an-stat">
@@ -300,36 +298,29 @@ function KpiCard({
           <div className="an-stat-num">{animatedValue.toLocaleString()}</div>
           <div className="an-stat-lbl">{label}</div>
         </div>
-        {points.length > 0 && (
-          <span className={`an-stat-badge ${isPositive ? 'up' : 'down'}`}>
-            {isPositive ? '+' : ''}
-            {delta.toLocaleString()}
-            {deltaSuffix}
-          </span>
-        )}
       </div>
-      <KpiSparkline points={points} />
+      <KpiSparkline values={sparkValues} title={sparkTitle} />
     </div>
   );
 }
 
-function KpiSparkline({ points }: { points: DailyTrendPoint[] }) {
-  if (points.length < 2) {
+function KpiSparkline({ values, title }: { values: number[]; title: string }) {
+  if (values.length < 2) {
     return <div className="an-spark" />;
   }
   const width = 160;
   const height = 34;
-  const max = Math.max(...points.map((p) => p.totalClicks), 1);
-  const stepX = width / (points.length - 1);
-  const coords = points.map((point, index) => {
+  const max = Math.max(...values, 1);
+  const stepX = width / (values.length - 1);
+  const coords = values.map((v, index) => {
     const x = stepX * index;
-    const y = height - 4 - (point.totalClicks / max) * (height - 8);
+    const y = height - 4 - (v / max) * (height - 8);
     return { x, y };
   });
   const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
 
   return (
-    <div className="an-spark">
+    <div className="an-spark" title={title}>
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
         <path d={linePath} className="an-spark-path" />
       </svg>
@@ -342,7 +333,7 @@ function TopAppsList({ topApps }: { topApps: TopApp[] }) {
     return (
       <div className="empty-state">
         <IconInbox width={26} height={26} aria-hidden="true" />
-        <p>No launches recorded in this range yet.</p>
+        <p>No usage recorded in this range yet.</p>
       </div>
     );
   }
@@ -435,7 +426,7 @@ function DailyTrendAreaChart({ points }: { points: DailyTrendPoint[] }) {
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
         role="img"
-        aria-label="Daily launch trend"
+        aria-label="Daily usage trend"
         onMouseLeave={() => setHoverIndex(null)}
       >
         <path d={areaPath} className="an-trend-area" />
@@ -477,7 +468,7 @@ function DailyTrendAreaChart({ points }: { points: DailyTrendPoint[] }) {
           style={{ left: `${(hovered.x / width) * 100}%` }}
         >
           <div className="an-trend-tooltip-date">{formatShortDate(hovered.point.date)}</div>
-          <div className="an-trend-tooltip-val">{hovered.point.totalClicks.toLocaleString()} launches</div>
+          <div className="an-trend-tooltip-val">{hovered.point.totalClicks.toLocaleString()} {hovered.point.totalClicks === 1 ? 'use' : 'uses'}</div>
         </div>
       )}
       <div className="an-trend-axis">
@@ -498,7 +489,7 @@ function TopAppsBarChart({ topApps }: { topApps: TopApp[] }) {
     return (
       <div className="empty-state">
         <IconInbox width={26} height={26} aria-hidden="true" />
-        <p>No launches recorded in this range yet.</p>
+        <p>No usage recorded in this range yet.</p>
       </div>
     );
   }
@@ -536,10 +527,10 @@ function TopAppsBarChart({ topApps }: { topApps: TopApp[] }) {
 
 function ModuleDonutChart({
   clicksByModule,
-  modulesById,
+  moduleNameById,
 }: {
   clicksByModule: ModuleClicks[];
-  modulesById: Map<string, ModuleWithApps>;
+  moduleNameById: Map<string, string>;
 }) {
   const [hoverId, setHoverId] = useState<string | null>(null);
 
@@ -617,7 +608,7 @@ function ModuleDonutChart({
             <span className="an-legend-name">
               {segment.moduleId === '__other__'
                 ? 'Other modules'
-                : modulesById.get(segment.moduleId)?.module.pulse_name ?? 'Unknown module'}
+                : moduleNameById.get(segment.moduleId) || 'Unknown module'}
             </span>
             <span className="val">{segment.totalClicks}</span>
           </div>
