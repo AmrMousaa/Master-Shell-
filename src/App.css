@@ -1823,24 +1823,6 @@ mark {
   margin-top: 2px;
 }
 
-.an-stat-badge {
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: var(--ds-radius-pill);
-  white-space: nowrap;
-}
-
-.an-stat-badge.up {
-  background: var(--ds-color-success-soft);
-  color: #15895f;
-}
-
-.an-stat-badge.down {
-  background: var(--ds-tone-error-bg);
-  color: var(--ds-tone-error-text);
-}
-
 .an-spark {
   position: relative;
   width: 100%;

@@ -131,7 +131,7 @@ function App() {
   } else if (status === 'error') {
     content = <ErrorState message={error} onRetry={retry} />;
   } else if (view.kind === 'analytics' && canViewAnalytics) {
-    content = <UsageAnalyticsDashboard modulesById={modulesById} />;
+    content = <UsageAnalyticsDashboard />;
   } else if (searchResults !== null) {
     content = (
       <AppGrid
@@ -195,6 +195,7 @@ function App() {
           onSearchChange={setSearchQuery}
           onOpenSidebar={() => setSidebarOpen(true)}
           userName={fullName}
+          showSearch={!(view.kind === 'analytics' && canViewAnalytics)}
         />
         <main className="content">{content}</main>
       </div>
