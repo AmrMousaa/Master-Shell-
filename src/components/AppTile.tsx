@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { Pulse_apps } from '../generated/models/Pulse_appsModel';
-import { launchApp } from '../utils/launchApp';
 import { Icon } from './Icon';
 import { IconStar } from './icons';
 
@@ -10,17 +9,18 @@ interface AppTileProps {
   isFavorite?: boolean;
   isFavoritePending?: boolean;
   onToggleFavorite?: (appId: string) => void;
+  onLaunch: (app: Pulse_apps) => void;
   index?: number;
 }
 
-export function AppTile({ app, moduleName, isFavorite, isFavoritePending, onToggleFavorite, index = 0 }: AppTileProps) {
+export function AppTile({ app, moduleName, isFavorite, isFavoritePending, onToggleFavorite, onLaunch, index = 0 }: AppTileProps) {
   const [popping, setPopping] = useState(false);
   return (
     <button
       type="button"
       className="tile"
       style={{ animationDelay: `${Math.min(index, 14) * 30}ms` }}
-      onClick={() => launchApp(app)}
+      onClick={() => onLaunch(app)}
       disabled={!app.pulse_appurl}
     >
       {onToggleFavorite && (

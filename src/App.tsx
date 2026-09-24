@@ -9,11 +9,15 @@ import { Dock } from './components/Dock';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { Toast } from './components/Toast';
+import { AppFrame } from './components/AppFrame';
 import { IconSearch } from './components/icons';
 import { useNavigationData } from './hooks/useNavigationData';
 import { useFavorites } from './hooks/useFavorites';
 import { useCurrentUser } from './hooks/useCurrentUser';
 import { hasAnalyticsAccess, hasPulseAdminAccess } from './services/currentUserAccess';
+import { recordAppUsage } from './services/usageTracking';
+import { openAppInNewTab } from './utils/launchApp';
+import type { Pulse_apps } from './generated/models/Pulse_appsModel';
 import type { View } from './types/view';
 import './App.css';
 
@@ -50,6 +54,18 @@ function App() {
     }
     previousViewKindRef.current = view.kind;
   }, [view.kind, retry]);
+
+  // Opening an app pushes a history entry so the browser's Back button closes
+  // it and returns to Pulse, instead of leaving the shell altogether.
+  useEffect(() => {
+    function onPopState(event: PopStateEvent) {
+      if (!event.state?.pulseAppId) {
+        setView((current) => (current.kind === 'app' ? current.returnTo : current));
+      }
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const moduleNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -103,24 +119,56 @@ function App() {
         ? 'pulseConfig'
         : 'home';
 
-  function goHome() {
-    setView({ kind: 'overview' });
+  const openApp = view.kind === 'app' ? appById.get(view.appId) : undefined;
+
+  // Leaving an open app for another screen: drop its history entry's marker so
+  // a later Back press doesn't try to "close" an app that's no longer shown.
+  function navigate(next: View) {
+    if (window.history.state?.pulseAppId) {
+      window.history.replaceState(null, '');
+    }
+    setView(next);
     setSearchQuery('');
+  }
+
+  function goHome() {
+    navigate({ kind: 'overview' });
   }
 
   function selectModule(moduleId: string) {
-    setView({ kind: 'module', moduleId });
-    setSearchQuery('');
+    navigate({ kind: 'module', moduleId });
   }
 
   function selectAnalytics() {
-    setView({ kind: 'analytics' });
-    setSearchQuery('');
+    navigate({ kind: 'analytics' });
   }
 
   function selectPulseConfig() {
-    setView({ kind: 'pulseConfig' });
+    navigate({ kind: 'pulseConfig' });
+  }
+
+  function launchApp(app: Pulse_apps) {
+    if (!app.pulse_appurl) return;
+    // No page navigation any more, so there's nothing to race: fire and forget.
+    void recordAppUsage(app.pulse_appid);
+    const historyState = { pulseAppId: app.pulse_appid };
+    if (view.kind === 'app') {
+      // Switching apps replaces the entry, so one Back press still returns to Pulse.
+      window.history.replaceState(historyState, '');
+    } else {
+      window.history.pushState(historyState, '');
+    }
+    setView({ kind: 'app', appId: app.pulse_appid, returnTo: view.kind === 'app' ? view.returnTo : view });
     setSearchQuery('');
+  }
+
+  function closeApp() {
+    if (window.history.state?.pulseAppId) {
+      // popstate handler restores the previous screen.
+      window.history.back();
+    } else {
+      setView((current) => (current.kind === 'app' ? current.returnTo : current));
+    }
   }
 
   let content: React.ReactNode;
@@ -132,6 +180,8 @@ function App() {
     content = <ErrorState message={error} onRetry={retry} />;
   } else if (view.kind === 'analytics' && canViewAnalytics) {
     content = <UsageAnalyticsDashboard />;
+  } else if (openApp) {
+    content = <AppFrame key={openApp.pulse_appid} app={openApp} />;
   } else if (searchResults !== null) {
     content = (
       <AppGrid
@@ -144,6 +194,7 @@ function App() {
         favoritedAppIds={favoritedAppIds}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        onLaunchApp={launchApp}
         onBack={goHome}
       />
     );
@@ -158,6 +209,7 @@ function App() {
         favoritedAppIds={favoritedAppIds}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        onLaunchApp={launchApp}
         onBack={goHome}
       />
     );
@@ -169,6 +221,7 @@ function App() {
         favoriteApps={favoriteApps}
         pendingAppIds={pendingAppIds}
         onToggleFavorite={toggleFavorite}
+        onLaunchApp={launchApp}
         moduleNameById={moduleNameById}
         userName={fullName}
       />
@@ -181,10 +234,10 @@ function App() {
         modules={modules}
         modulesById={modulesById}
         selectedModuleId={view.kind === 'module' ? view.moduleId : null}
-        onSelectModule={selectModule}
         onGoHome={goHome}
         favoritedAppIds={favoritedAppIds}
         onToggleFavorite={toggleFavorite}
+        onLaunchApp={launchApp}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userName={fullName}
@@ -196,18 +249,28 @@ function App() {
           onOpenSidebar={() => setSidebarOpen(true)}
           userName={fullName}
           showSearch={!(view.kind === 'analytics' && canViewAnalytics)}
+          openApp={
+            openApp && {
+              name: openApp.pulse_name ?? 'App',
+              onClose: closeApp,
+              onOpenInNewTab: () => openAppInNewTab(openApp),
+            }
+          }
         />
-        <main className="content">{content}</main>
+        <main className={`content${openApp ? ' content-app' : ''}`}>{content}</main>
       </div>
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
-      <Dock
-        active={dockActive}
-        onGoHome={goHome}
-        onSelectAnalytics={selectAnalytics}
-        onSelectPulseConfig={selectPulseConfig}
-        canViewAnalytics={canViewAnalytics}
-        canManagePulseConfig={canManagePulseConfig}
-      />
+      {/* The dock floats over the bottom of the page, which would cover the embedded app. */}
+      {!openApp && (
+        <Dock
+          active={dockActive}
+          onGoHome={goHome}
+          onSelectAnalytics={selectAnalytics}
+          onSelectPulseConfig={selectPulseConfig}
+          canViewAnalytics={canViewAnalytics}
+          canManagePulseConfig={canManagePulseConfig}
+        />
+      )}
     </div>
   );
 }

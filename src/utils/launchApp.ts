@@ -14,13 +14,25 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function appLaunchUrl(app: Pulse_apps): string | null {
+  return app.pulse_appurl ? withHiddenNavbar(app.pulse_appurl) : null;
+}
+
+// Full-page redirect: leaves Pulse entirely. Kept as the fallback for apps
+// that can't be embedded in the shell.
 export async function launchApp(app: Pulse_apps): Promise<void> {
-  if (!app.pulse_appurl) return;
-  const url = withHiddenNavbar(app.pulse_appurl);
+  const url = appLaunchUrl(app);
+  if (!url) return;
   // window.location.href triggers a same-tab navigation, which cancels any
   // in-flight requests once the browser starts unloading this page. Give
   // recordAppUsage a brief, capped head start so its writes actually reach
   // the server before that happens, without noticeably delaying the launch.
   await Promise.race([recordAppUsage(app.pulse_appid), delay(USAGE_RECORD_TIMEOUT_MS)]);
   window.location.href = url;
+}
+
+export function openAppInNewTab(app: Pulse_apps): void {
+  const url = appLaunchUrl(app);
+  if (!url) return;
+  window.open(url, '_blank', 'noopener');
 }

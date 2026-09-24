@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import type { Pulse_apps } from '../generated/models/Pulse_appsModel';
 import type { Pulse_modules } from '../generated/models/Pulse_modulesModel';
 import type { ModuleWithApps } from '../hooks/useNavigationData';
-import { launchApp } from '../utils/launchApp';
 import { initials } from '../utils/initials';
 import { Icon } from './Icon';
 import { IconChevronLeft, IconChevronRight, IconLayers, IconSearch, IconStar } from './icons';
@@ -11,10 +10,10 @@ interface SidebarProps {
   modules: Pulse_modules[];
   modulesById: Map<string, ModuleWithApps>;
   selectedModuleId: string | null;
-  onSelectModule: (moduleId: string) => void;
   onGoHome: () => void;
   favoritedAppIds: Set<string>;
   onToggleFavorite: (appId: string) => void;
+  onLaunchApp: (app: Pulse_apps) => void;
   isOpen: boolean;
   onClose: () => void;
   userName?: string;
@@ -37,10 +36,10 @@ export function Sidebar({
   modules,
   modulesById,
   selectedModuleId,
-  onSelectModule,
   onGoHome,
   favoritedAppIds,
   onToggleFavorite,
+  onLaunchApp,
   isOpen,
   onClose,
   userName,
@@ -140,8 +139,7 @@ export function Sidebar({
                           tabIndex={0}
                           onClick={() => {
                             if (disabled) return;
-                            launchApp(app);
-                            onSelectModule(module.pulse_moduleid);
+                            onLaunchApp(app);
                             onClose();
                           }}
                         >

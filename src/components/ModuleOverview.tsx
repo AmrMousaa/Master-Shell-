@@ -12,6 +12,7 @@ interface ModuleOverviewProps {
   favoriteApps: Pulse_apps[];
   pendingAppIds: Set<string>;
   onToggleFavorite: (appId: string) => void;
+  onLaunchApp: (app: Pulse_apps) => void;
   moduleNameById: Map<string, string>;
   userName?: string;
 }
@@ -31,6 +32,7 @@ export function ModuleOverview({
   favoriteApps,
   pendingAppIds,
   onToggleFavorite,
+  onLaunchApp,
   moduleNameById,
   userName,
 }: ModuleOverviewProps) {
@@ -109,6 +111,7 @@ export function ModuleOverview({
               isFavorite
               isFavoritePending={pendingAppIds.has(app.pulse_appid)}
               onToggleFavorite={onToggleFavorite}
+              onLaunch={onLaunchApp}
             />
           ))}
         </div>

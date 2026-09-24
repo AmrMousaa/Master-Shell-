@@ -16,6 +16,7 @@ interface AppGridProps {
   favoritedAppIds?: Set<string>;
   pendingAppIds?: Set<string>;
   onToggleFavorite?: (appId: string) => void;
+  onLaunchApp: (app: Pulse_apps) => void;
   onBack: () => void;
 }
 
@@ -31,6 +32,7 @@ export function AppGrid({
   favoritedAppIds,
   pendingAppIds,
   onToggleFavorite,
+  onLaunchApp,
   onBack,
 }: AppGridProps) {
   return (
@@ -70,6 +72,7 @@ export function AppGrid({
               isFavorite={favoritedAppIds?.has(app.pulse_appid)}
               isFavoritePending={pendingAppIds?.has(app.pulse_appid)}
               onToggleFavorite={onToggleFavorite}
+              onLaunch={onLaunchApp}
             />
           ))}
         </div>
