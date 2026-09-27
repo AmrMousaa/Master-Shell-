@@ -181,7 +181,6 @@ function App() {
         modules={modules}
         modulesById={modulesById}
         selectedModuleId={view.kind === 'module' ? view.moduleId : null}
-        onSelectModule={selectModule}
         onGoHome={goHome}
         favoritedAppIds={favoritedAppIds}
         onToggleFavorite={toggleFavorite}

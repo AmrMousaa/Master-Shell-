@@ -188,7 +188,7 @@ export function UsageAnalyticsDashboard() {
               <div className="an-panel-head">
                 <h2>
                   <IconArrowUpRight width={15} height={15} aria-hidden="true" />
-                  Top Apps
+                  Usage per App
                 </h2>
                 {topApps.length > PANEL_LIST_LIMIT && (
                   <button type="button" className="an-see-more" onClick={() => setShowTopAppsModal(true)}>
@@ -221,7 +221,7 @@ export function UsageAnalyticsDashboard() {
 
           {/* The modals list everything (not just what's past the panel cap) so the ranking reads from #1. */}
           {showTopAppsModal && (
-            <Modal title="Top Apps" onClose={() => setShowTopAppsModal(false)}>
+            <Modal title="Usage per App" onClose={() => setShowTopAppsModal(false)}>
               <TopAppsList topApps={topApps} />
             </Modal>
           )}
@@ -256,7 +256,7 @@ export function UsageAnalyticsDashboard() {
               <div className="an-panel-head">
                 <h2>
                   <IconLayers width={15} height={15} aria-hidden="true" />
-                  Most Used Modules
+                  Usage per Module
                 </h2>
               </div>
               <div className="an-donut-wrap">
@@ -266,7 +266,7 @@ export function UsageAnalyticsDashboard() {
 
             <div className="an-panel">
               <div className="an-panel-head">
-                <h2>Top Apps Usage</h2>
+                <h2>Usage per App (Top 6)</h2>
               </div>
               <div className="an-chart-wrap" style={{ height: 160 }}>
                 <TopAppsBarChart topApps={topApps.slice(0, 6)} />

@@ -11,7 +11,6 @@ interface SidebarProps {
   modules: Pulse_modules[];
   modulesById: Map<string, ModuleWithApps>;
   selectedModuleId: string | null;
-  onSelectModule: (moduleId: string) => void;
   onGoHome: () => void;
   favoritedAppIds: Set<string>;
   onToggleFavorite: (appId: string) => void;
@@ -37,7 +36,6 @@ export function Sidebar({
   modules,
   modulesById,
   selectedModuleId,
-  onSelectModule,
   onGoHome,
   favoritedAppIds,
   onToggleFavorite,
@@ -141,7 +139,6 @@ export function Sidebar({
                           onClick={() => {
                             if (disabled) return;
                             launchApp(app);
-                            onSelectModule(module.pulse_moduleid);
                             onClose();
                           }}
                         >
